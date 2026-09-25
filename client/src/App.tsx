@@ -1,5 +1,12 @@
-// Root App component with routing
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
+import { Toaster } from './components/ui/toaster';
 
 export default function App() {
-  return <div>Eddy App</div>;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
+  );
 }
