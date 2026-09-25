@@ -1,0 +1,32 @@
+# Backend CI workflow
+name: Backend CI
+on:
+  push:
+    paths:
+      - 'server/**'
+  pull_request:
+    paths:
+      - 'server/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm install
+      - name: Lint
+        working-directory: ./server
+        run: npm run lint
+      - name: Type check
+        working-directory: ./server
+        run: npm run typecheck
+      - name: Test
+        working-directory: ./server
+        run: npm test
+      - name: Build
+        working-directory: ./server
+        run: npm run build

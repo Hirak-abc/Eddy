@@ -1,0 +1,1 @@
+// qr validation schemas
