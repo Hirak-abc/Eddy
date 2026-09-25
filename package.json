@@ -1,0 +1,23 @@
+{
+  "name": "eddy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Eddy — SMB Flyer & Customer Rewards Platform",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "build:client": "npm run build --prefix client",
+    "build:server": "npm run build --prefix server",
+    "build": "npm run build:client && npm run build:server",
+    "lint:client": "npm run lint --prefix client",
+    "lint:server": "npm run lint --prefix server",
+    "lint": "npm run lint:client && npm run lint:server",
+    "typecheck:client": "npm run typecheck --prefix client",
+    "typecheck:server": "npm run typecheck --prefix server",
+    "typecheck": "npm run typecheck:client && npm run typecheck:server"
+  }
+}

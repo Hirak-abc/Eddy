@@ -1,0 +1,45 @@
+name: Feature Request
+description: Suggest an idea or feature for Eddy
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for suggesting a feature for Eddy!
+  - type: input
+    id: title
+    attributes:
+      label: Feature Title
+      description: A concise title for the feature
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Target Module
+      options:
+        - AI Flyer Generation
+        - Rewards & Gamification
+        - Customer Wallet & Coins
+        - QR Code & Check-in
+        - Social Media & Meta Publishing
+        - Coupons & Deals
+        - Customer Reviews
+        - Analytics & Reporting
+        - Payments & Subscriptions
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true

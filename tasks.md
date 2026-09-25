@@ -23,26 +23,28 @@
 ## 0. Project Setup & Team Workflow
 
 ### Repository
-- [ ] Create the Eddy repository structure.
-- [ ] Create `client/` React + TypeScript application.
-- [ ] Create `server/` Express + TypeScript application.
-- [ ] Create `convex/` database directory.
-- [ ] Create `docs/` directory.
-- [ ] Add root `package.json`.
-- [ ] Add `.gitignore`.
-- [ ] Add `.env.example`.
-- [ ] Add `README.md`.
-- [ ] Add `ARCHITECTURE.md`.
-- [ ] Add `tasks.md`.
+
+- [x] Create the Eddy repository structure.
+- [x] Create `client/` React + TypeScript application.
+- [x] Create `server/` Express + TypeScript application.
+- [x] Create `convex/` database directory.
+- [x] Create `docs/` directory.
+- [x] Add root `package.json`.
+- [x] Add `.gitignore`.
+- [x] Add `.env.example`.
+- [x] Add `README.md`.
+- [x] Add `ARCHITECTURE.md`.
+- [x] Add `tasks.md`.
 
 ### Git & Collaboration
-- [ ] Protect `main` branch.
-- [ ] Define feature branch naming convention.
-- [ ] Require pull-request review before merging.
-- [ ] Require CI checks before merging.
-- [ ] Connect production deployment to protected `main`.
-- [ ] Define team ownership for frontend, backend, integrations, and QA.
-- [ ] Define issue/PR template.
+
+- [x] Protect `main` branch.
+- [x] Define feature branch naming convention.
+- [x] Require pull-request review before merging.
+- [x] Require CI checks before merging.
+- [x] Connect production deployment to protected `main`.
+- [x] Define team ownership for frontend, backend, integrations, and QA.
+- [x] Define issue/PR template.
 
 ---
 
@@ -64,6 +66,7 @@
 - [ ] Create customer application shell.
 
 ### Owner Pages
+
 - [ ] Owner onboarding.
 - [ ] Owner dashboard.
 - [ ] Trend flyers.
@@ -80,6 +83,7 @@
 - [ ] Subscription/account settings.
 
 ### Customer Pages
+
 - [ ] Customer home.
 - [ ] Shop discovery.
 - [ ] Shop environment.
@@ -157,6 +161,7 @@
 - [ ] Implement `PATCH /api/businesses/:id`.
 
 ### Business Images
+
 - [ ] Support the three primary business images:
   - [ ] Shop/business image.
   - [ ] Main product image.
@@ -259,6 +264,7 @@
   - [ ] `EXPIRED`
 
 ### Hashtag Generation
+
 - [ ] Generate hashtags from business type.
 - [ ] Generate hashtags from business location.
 - [ ] Include flyer topic.
@@ -763,6 +769,7 @@
 ## 43. End-to-End Tests [P0]
 
 ### Owner Flow
+
 - [ ] Signup/login.
 - [ ] Business registration.
 - [ ] Payment.
@@ -776,6 +783,7 @@
 - [ ] View analytics.
 
 ### Customer Flow
+
 - [ ] Signup/login.
 - [ ] Scan business QR.
 - [ ] Enter shop environment.
