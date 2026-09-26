@@ -1,2 +1,1 @@
-// Business settings page
-export const SettingsPage = () => null;
+export const SettingsPage = () => <div className="p-6">Subscription & settings.</div>;

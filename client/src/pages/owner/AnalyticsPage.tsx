@@ -1,2 +1,1 @@
-// Business analytics page
-export const AnalyticsPage = () => null;
+export const AnalyticsPage = () => <div className="p-6">Business analytics.</div>;

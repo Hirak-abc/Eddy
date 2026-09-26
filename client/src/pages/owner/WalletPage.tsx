@@ -1,2 +1,1 @@
-// Owner wallet/payments page
-export const WalletPage = () => null;
+export const WalletPage = () => <div className="p-6">Owner wallet.</div>;

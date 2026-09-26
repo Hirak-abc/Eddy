@@ -1,2 +1,1 @@
-// Reviews management page
-export const ReviewsPage = () => null;
+export const ReviewsPage = () => <div className="p-6">Customer reviews.</div>;

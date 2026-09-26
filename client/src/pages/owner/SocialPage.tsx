@@ -1,2 +1,1 @@
-// Social publishing page
-export const SocialPage = () => null;
+export const SocialPage = () => <div className="p-6">Social media management.</div>;

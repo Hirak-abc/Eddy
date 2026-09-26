@@ -1,2 +1,1 @@
-// Owner dashboard page
-export const DashboardPage = () => null;
+export const DashboardPage = () => <div className="p-4 bg-red-100">Owner Dashboard Content</div>;

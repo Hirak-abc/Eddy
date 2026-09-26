@@ -1,2 +1,1 @@
-// QR scan page
-export const ScanPage = () => null;
+export const ScanPage = () => <div className="p-4">QR scan page.</div>;

@@ -1,2 +1,1 @@
-// Coupon management page
-export const CouponsPage = () => null;
+export const CouponsPage = () => <div className="p-6">Coupon management.</div>;

@@ -1,2 +1,1 @@
-// Customer home / discovery page
-export const HomePage = () => null;
+export const HomePage = () => <div className="p-4 bg-blue-100">Customer Home Content</div>;

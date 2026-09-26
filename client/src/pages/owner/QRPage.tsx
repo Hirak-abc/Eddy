@@ -1,2 +1,1 @@
-// QR code management page
-export const QRPage = () => null;
+export const QRPage = () => <div className="p-6">QR code management.</div>;

@@ -1,2 +1,1 @@
-// Customer rewards page
-export const CustomerRewardsPage = () => null;
+export const CustomerRewardsPage = () => <div className="p-4">Customer rewards.</div>;
