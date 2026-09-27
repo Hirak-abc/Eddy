@@ -1,1 +1,1 @@
-export const ReviewRatingPage = () => <div className="p-4">Review/rating flow.</div>;
+export const ReviewRatingPage = () => <div className="p-4">Review and rating submission flow.</div>;

@@ -7,6 +7,7 @@ import { OwnerLayout } from '../layouts/OwnerLayout';
 import { DashboardPage } from '../pages/owner/DashboardPage';
 import { OnboardingPage } from '../pages/owner/OnboardingPage';
 import { TrendFlyersPage } from '../pages/owner/TrendFlyersPage';
+import { FlyersDashboardPage } from '../pages/owner/FlyersDashboardPage';
 import { FlyerBuilderPage } from '../pages/owner/FlyerBuilderPage';
 import { ScheduledFlyersPage } from '../pages/owner/ScheduledFlyersPage';
 import { PublishedFlyersPage } from '../pages/owner/PublishedFlyersPage';
@@ -51,9 +52,15 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'onboarding', element: <OnboardingPage /> },
       { path: 'trend-flyers', element: <TrendFlyersPage /> },
-      { path: 'flyers/create', element: <FlyerBuilderPage /> },
-      { path: 'flyers/scheduled', element: <ScheduledFlyersPage /> },
-      { path: 'flyers/published', element: <PublishedFlyersPage /> },
+      {
+        path: 'flyers',
+        children: [
+          { index: true, element: <FlyersDashboardPage /> },
+          { path: 'create', element: <FlyerBuilderPage /> },
+          { path: 'scheduled', element: <ScheduledFlyersPage /> },
+          { path: 'published', element: <PublishedFlyersPage /> },
+        ],
+      },
       { path: 'coupons', element: <CouponsPage /> },
       { path: 'reviews', element: <ReviewsPage /> },
       { path: 'wallet', element: <OwnerWalletPage /> },

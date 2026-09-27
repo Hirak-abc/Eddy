@@ -1,1 +1,1 @@
-export const CouponCodesPage = () => <div className="p-4">Coupon codes.</div>;
+export const CouponCodesPage = () => <div className="p-4">My coupon codes.</div>;

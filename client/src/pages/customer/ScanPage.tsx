@@ -1,1 +1,1 @@
-export const ScanPage = () => <div className="p-4">QR scan page.</div>;
+export const ScanPage = () => <div className="p-4">QR / Reward Scan Scanner.</div>;

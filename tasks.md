@@ -101,23 +101,23 @@
 
 ## 2. Backend Foundation [P0]
 
-- [ ] Configure Express application.
-- [ ] Configure TypeScript.
-- [ ] Create `app.ts`.
-- [ ] Create `server.ts`.
-- [ ] Add environment configuration.
-- [ ] Add application constants.
-- [ ] Add request logging.
-- [ ] Add global error middleware.
-- [ ] Add authentication middleware.
-- [ ] Add authorization middleware.
-- [ ] Add Zod validation middleware.
-- [ ] Add rate-limit middleware.
-- [ ] Define `/api` base route.
-- [ ] Create controller/service/repository module pattern.
-- [ ] Enforce module dependency boundaries.
-- [ ] Keep business logic in services.
-- [ ] Keep database access inside repositories/Convex functions.
+- [x] Configure Express application.
+- [x] Configure TypeScript.
+- [x] Create `app.ts`.
+- [x] Create `server.ts`.
+- [x] Add environment configuration.
+- [x] Add application constants.
+- [x] Add request logging.
+- [x] Add global error middleware.
+- [x] Add authentication middleware.
+- [x] Add authorization middleware.
+- [x] Add Zod validation middleware.
+- [x] Add rate-limit middleware.
+- [x] Define `/api` base route.
+- [x] Create controller/service/repository module pattern.
+- [x] Enforce module dependency boundaries.
+- [x] Keep business logic in services.
+- [x] Keep database access inside repositories/Convex functions.
 
 ---
 
