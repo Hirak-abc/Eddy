@@ -10,10 +10,10 @@ export const LandingPage = () => {
 
       <div className="flex gap-4">
         <Button asChild size="lg">
-          <Link to={`${ROUTES.OWNER_DASHBOARD}?role=OWNER`}>Access Owner Portal</Link>
+          <Link to={ROUTES.SIGN_UP}>Sign up</Link>
         </Button>
-        <Button asChild size="lg" variant="secondary">
-          <Link to={`${ROUTES.CUSTOMER_HOME}?role=CUSTOMER`}>Access Customer Portal</Link>
+        <Button asChild size="lg" variant="outline">
+          <Link to={ROUTES.SIGN_IN}>Sign in</Link>
         </Button>
       </div>
     </div>

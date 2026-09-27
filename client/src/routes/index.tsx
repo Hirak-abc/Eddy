@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { ROUTES } from '../lib/constants';
 import { LandingPage } from '../pages/LandingPage';
+import { AuthLayout } from '../layouts/AuthLayout';
 import { SignInPage } from '../pages/auth/SignInPage';
 import { SignUpPage } from '../pages/auth/SignUpPage';
 import { OwnerLayout } from '../layouts/OwnerLayout';
@@ -37,8 +38,13 @@ import { ProtectedRoute } from './ProtectedRoute';
 export const router = createBrowserRouter([
   // Public
   { path: ROUTES.HOME, element: <LandingPage /> },
-  { path: ROUTES.SIGN_IN, element: <SignInPage /> },
-  { path: ROUTES.SIGN_UP, element: <SignUpPage /> },
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: ROUTES.SIGN_IN, element: <SignInPage /> },
+      { path: ROUTES.SIGN_UP, element: <SignUpPage /> },
+    ],
+  },
 
   // Protected Owner
   {
