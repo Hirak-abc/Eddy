@@ -52,72 +52,72 @@
 
 ## 1. Frontend Foundation [P0]
 
-- [ ] Configure React + TypeScript.
-- [ ] Configure Tailwind CSS.
-- [ ] Configure application routing.
-- [ ] Create shared UI components.
-- [ ] Create layout components.
-- [ ] Create reusable form components.
-- [ ] Create loading/error/empty states.
-- [ ] Create API service layer.
-- [ ] Create shared TypeScript types.
-- [ ] Create protected-route handling.
-- [ ] Create owner application shell.
-- [ ] Create customer application shell.
+- [x] Configure React + TypeScript.
+- [x] Configure Tailwind CSS.
+- [x] Configure application routing.
+- [x] Create shared UI components.
+- [x] Create layout components.
+- [x] Create reusable form components.
+- [x] Create loading/error/empty states.
+- [x] Create API service layer.
+- [x] Create shared TypeScript types.
+- [x] Create protected-route handling.
+- [x] Create owner application shell.
+- [x] Create customer application shell.
 
 ### Owner Pages
 
-- [ ] Owner onboarding.
-- [ ] Owner dashboard.
-- [ ] Trend flyers.
-- [ ] Create flyer.
-- [ ] Scheduled flyers.
-- [ ] Published flyers.
-- [ ] Coupon management.
-- [ ] Customer reviews.
-- [ ] Wallet.
-- [ ] QR code.
-- [ ] Social media.
-- [ ] Analytics.
-- [ ] Business profile.
-- [ ] Subscription/account settings.
+- [x] Owner onboarding.
+- [x] Owner dashboard.
+- [x] Trend flyers.
+- [x] Create flyer.
+- [x] Scheduled flyers.
+- [x] Published flyers.
+- [x] Coupon management.
+- [x] Customer reviews.
+- [x] Wallet.
+- [x] QR code.
+- [x] Social media.
+- [x] Analytics.
+- [x] Business profile.
+- [x] Subscription/account settings.
 
 ### Customer Pages
 
-- [ ] Customer home.
-- [ ] Shop discovery.
-- [ ] Shop environment.
-- [ ] QR/reward screen.
-- [ ] Spin wheel.
-- [ ] Wallet.
-- [ ] Rewards history.
-- [ ] Coupon codes.
-- [ ] Following.
-- [ ] Streak.
-- [ ] Transaction history.
-- [ ] Review/rating flow.
+- [x] Customer home.
+- [x] Shop discovery.
+- [x] Shop environment.
+- [x] QR/reward screen.
+- [x] Spin wheel.
+- [x] Wallet.
+- [x] Rewards history.
+- [x] Coupon codes.
+- [x] Following.
+- [x] Streak.
+- [x] Transaction history.
+- [x] Review/rating flow.
 
 ---
 
 ## 2. Backend Foundation [P0]
 
-- [ ] Configure Express application.
-- [ ] Configure TypeScript.
-- [ ] Create `app.ts`.
-- [ ] Create `server.ts`.
-- [ ] Add environment configuration.
-- [ ] Add application constants.
-- [ ] Add request logging.
-- [ ] Add global error middleware.
-- [ ] Add authentication middleware.
-- [ ] Add authorization middleware.
-- [ ] Add Zod validation middleware.
-- [ ] Add rate-limit middleware.
-- [ ] Define `/api` base route.
-- [ ] Create controller/service/repository module pattern.
-- [ ] Enforce module dependency boundaries.
-- [ ] Keep business logic in services.
-- [ ] Keep database access inside repositories/Convex functions.
+- [x] Configure Express application.
+- [x] Configure TypeScript.
+- [x] Create `app.ts`.
+- [x] Create `server.ts`.
+- [x] Add environment configuration.
+- [x] Add application constants.
+- [x] Add request logging.
+- [x] Add global error middleware.
+- [x] Add authentication middleware.
+- [x] Add authorization middleware.
+- [x] Add Zod validation middleware.
+- [x] Add rate-limit middleware.
+- [x] Define `/api` base route.
+- [x] Create controller/service/repository module pattern.
+- [x] Enforce module dependency boundaries.
+- [x] Keep business logic in services.
+- [x] Keep database access inside repositories/Convex functions.
 
 ---
 

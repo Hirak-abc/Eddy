@@ -19,5 +19,8 @@
     "typecheck:client": "npm run typecheck --prefix client",
     "typecheck:server": "npm run typecheck --prefix server",
     "typecheck": "npm run typecheck:client && npm run typecheck:server"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14"
   }
 }
