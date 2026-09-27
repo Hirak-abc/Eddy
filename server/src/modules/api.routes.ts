@@ -7,8 +7,8 @@ apiRoutes.get('/health', (req, res) => {
   res.status(200).json({ success: true, data: { status: 'api ok' }, error: null });
 });
 
-// Import and use module routes here
-// apiRoutes.use('/identity', identityRoutes);
-// apiRoutes.use('/businesses', businessRoutes);
+import identityRoutes from './identity/identity.routes';
+
+apiRoutes.use('/identity', identityRoutes);
 
 export default apiRoutes;
