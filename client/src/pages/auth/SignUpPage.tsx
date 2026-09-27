@@ -1,2 +1,3 @@
-// Sign-up page
-export const SignUpPage = () => null;
+import { AuthForm } from '@/components/auth/AuthForm';
+
+export const SignUpPage = () => <AuthForm mode="sign-up" />;
