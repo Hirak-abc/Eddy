@@ -1,1 +1,11 @@
-// Express type augmentations (e.g. req.auth, req.user)
+declare global {
+  namespace Express {
+    export interface Request {
+      auth?: {
+        clerkId: string;
+        role?: string;
+        status?: string;
+      };
+    }
+  }
+}

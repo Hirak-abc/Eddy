@@ -7,11 +7,24 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    // Auth token will be handled by interceptors via Clerk in the future
-    ...options.headers,
   };
+  if (options.headers) {
+    for (const [k, v] of Object.entries(options.headers)) {
+      headers[k] = String(v);
+    }
+  }
+
+  // When the frontend makes authenticated API calls, it must include the
+  // Clerk session token via the `Authorization: Bearer <token>` header.
+  // That is done by calling `getToken()` from `@clerk/clerk-react`'s
+  // `useAuth()` hook at the call site and passing it here. This wrapper
+  // does not retrieve the token automatically to avoid coupling every
+  // request to Clerk; callers that need auth should inject the header.
+  // Example when /api/me is added:
+  //   api.get('/me', { headers: { Authorization: `Bearer ${await getToken()}` } })
+
 
   try {
     const response = await fetch(url, { ...options, headers });

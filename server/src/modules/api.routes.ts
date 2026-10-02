@@ -9,6 +9,6 @@ apiRoutes.get('/health', (req, res) => {
 
 import identityRoutes from './identity/identity.routes';
 
-apiRoutes.use('/identity', identityRoutes);
+apiRoutes.use('/', identityRoutes);
 
 export default apiRoutes;
