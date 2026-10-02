@@ -35,9 +35,15 @@ import { CustomerRewardsPage } from '../pages/customer/RewardsPage';
 import { ProfilePage } from '../pages/customer/ProfilePage';
 import { ProtectedRoute } from './ProtectedRoute';
 
+import { AuthCallbackPage } from '../pages/auth/AuthCallbackPage';
+import { GoogleEmailSelectPage } from '../pages/auth/GoogleEmailSelectPage';
+
 export const router = createBrowserRouter([
   // Public
   { path: ROUTES.HOME, element: <LandingPage /> },
+  // OAuth callback route
+  { path: '/auth/sso-callback', element: <AuthCallbackPage /> },
+  { path: '/google/select', element: <GoogleEmailSelectPage /> },
   {
     element: <AuthLayout />,
     children: [

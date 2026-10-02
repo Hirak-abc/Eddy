@@ -8,7 +8,13 @@ export const updateProfileSchema = z.object({
 
 export const emailAuthSchema = z.object({
   email: z.string().email('Enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine(
+      (pwd) => /[a-zA-Z]/.test(pwd) || /[0-9]/.test(pwd),
+      'Password must contain at least one letter or number'
+    ),
 });
 
 export const phoneAuthSchema = z.object({
