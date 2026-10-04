@@ -1,11 +1,14 @@
+import type { UserRole } from './index';
+
 declare global {
   namespace Express {
-    export interface Request {
-      auth?: {
-        clerkId: string;
-        role?: string;
-        status?: string;
+    interface Request {
+      user?: {
+        id: string;
+        role?: UserRole;
       };
     }
   }
 }
+
+export {};

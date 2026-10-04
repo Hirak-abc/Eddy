@@ -1,17 +1,22 @@
-import { ClerkProvider } from '@clerk/clerk-react';
+import { useEffect } from 'react';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes';
+import { setAuthTokenGetter } from './services/api';
 import { Toaster } from 'sonner';
-import { CLERK_PUBLISHABLE_KEY } from './lib/constants';
-
-// Get the Clerk publishable key from environment
-const PUBLISHABLE_KEY = CLERK_PUBLISHABLE_KEY;
 
 export default function App() {
+  const { getToken } = useClerkAuth();
+
+  useEffect(() => {
+    setAuthTokenGetter(getToken);
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <>
       <RouterProvider router={router} />
       <Toaster position="top-right" />
-    </ClerkProvider>
+    </>
   );
 }

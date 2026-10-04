@@ -1,9 +1,10 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ROUTES } from '../lib/constants';
 import { LandingPage } from '../pages/LandingPage';
-import { AuthLayout } from '../layouts/AuthLayout';
 import { SignInPage } from '../pages/auth/SignInPage';
 import { SignUpPage } from '../pages/auth/SignUpPage';
+import { CompleteSignupPage } from '../pages/auth/CompleteSignupPage';
+import { CompleteLoginPage } from '../pages/auth/CompleteLoginPage';
 import { OwnerLayout } from '../layouts/OwnerLayout';
 import { DashboardPage } from '../pages/owner/DashboardPage';
 import { OnboardingPage } from '../pages/owner/OnboardingPage';
@@ -35,22 +36,13 @@ import { CustomerRewardsPage } from '../pages/customer/RewardsPage';
 import { ProfilePage } from '../pages/customer/ProfilePage';
 import { ProtectedRoute } from './ProtectedRoute';
 
-import { AuthCallbackPage } from '../pages/auth/AuthCallbackPage';
-import { GoogleEmailSelectPage } from '../pages/auth/GoogleEmailSelectPage';
-
 export const router = createBrowserRouter([
   // Public
   { path: ROUTES.HOME, element: <LandingPage /> },
-  // OAuth callback route
-  { path: '/auth/sso-callback', element: <AuthCallbackPage /> },
-  { path: '/google/select', element: <GoogleEmailSelectPage /> },
-  {
-    element: <AuthLayout />,
-    children: [
-      { path: ROUTES.SIGN_IN, element: <SignInPage /> },
-      { path: ROUTES.SIGN_UP, element: <SignUpPage /> },
-    ],
-  },
+  { path: `${ROUTES.SIGN_IN}/*`, element: <SignInPage /> },
+  { path: `${ROUTES.SIGN_UP}/*`, element: <SignUpPage /> },
+  { path: '/complete-signup', element: <CompleteSignupPage /> },
+  { path: '/complete-login', element: <CompleteLoginPage /> },
 
   // Protected Owner
   {
@@ -61,6 +53,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'onboarding', element: <OnboardingPage /> },
       { path: 'trend-flyers', element: <TrendFlyersPage /> },
@@ -92,6 +85,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <Navigate to="home" replace /> },
       { path: 'home', element: <HomePage /> },
       { path: 'discover', element: <ShopDiscoveryPage /> },
       { path: 'shop', element: <ShopEnvironmentPage /> },

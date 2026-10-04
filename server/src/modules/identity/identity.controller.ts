@@ -1,80 +1,53 @@
 import { Request, Response, NextFunction } from 'express';
 import { IDENTITY_SERVICE } from './identity.service';
-import { patchMeSchema, signupRoleSchema } from './identity.schema';
+import { z } from 'zod';
+
+const roleSchema = z.object({
+  role: z.enum(['OWNER', 'CUSTOMER']),
+});
 
 export const IDENTITY_CONTROLLER = {
-  getMe: async (req: Request, res: Response, next: NextFunction) => {
+  setRole: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authIdentity = (req as Request & { auth?: { clerkId: string } }).auth;
-      if (!authIdentity || !authIdentity.clerkId) {
+      const { role } = roleSchema.parse(req.body);
+      const userId = req.user?.id;
+      if (!userId) {
         return res.status(401).json({
           success: false,
           data: null,
           error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
         });
       }
-
-      // Optional validated signup role for new-user creation only.
-      // Never accepted for existing users; existing Convex role remains authoritative.
-      const rawRole = req.query?.role;
-      // Express may parse query params as arrays; normalize to string.
-      const roleString = Array.isArray(rawRole) ? rawRole[0] : rawRole;
-      let validatedRole: 'OWNER' | 'CUSTOMER' | undefined;
-      if (roleString !== undefined) {
-        const parsedRole = signupRoleSchema.safeParse(roleString);
-        if (!parsedRole.success) {
-          return res.status(400).json({
-            success: false,
-            data: null,
-            error: {
-              code: 'VALIDATION_ERROR',
-              message: 'Invalid signup role. Allowed: OWNER, CUSTOMER.',
-              details: parsedRole.error.errors,
-            },
-          });
-        }
-        validatedRole = parsedRole.data as 'OWNER' | 'CUSTOMER';
+      if (req.user?.role) {
+        return res.status(409).json({
+          success: false,
+          data: null,
+          error: { code: 'ROLE_ALREADY_SET', message: 'This account already has a role' },
+        });
       }
 
-      const user = await IDENTITY_SERVICE.getOrCreateApplicationUser(authIdentity.clerkId, validatedRole);
-      console.log('[DEBUG /me] returning user:', JSON.stringify(user));
-      return res.status(200).json({
-        success: true,
-        data: user,
-        error: null,
-      });
-    } catch (err) {
-      return next(err);
+      const user = await IDENTITY_SERVICE.setRole(userId, role);
+      return res.status(200).json({ success: true, data: user, error: null });
+    } catch (error) {
+      next(error);
     }
   },
+
+  getMe: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await IDENTITY_SERVICE.getCurrentUser(req.user!.id);
+      res.status(200).json({ success: true, data: user, error: null });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   updateMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authIdentity = (req as Request & { auth?: { clerkId: string } }).auth;
-      if (!authIdentity || !authIdentity.clerkId) {
-        return res.status(401).json({
-          success: false,
-          data: null,
-          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
-        });
-      }
-
-      const parsed = patchMeSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          success: false,
-          data: null,
-          error: { code: 'VALIDATION_ERROR', message: 'Invalid request body', details: parsed.error.errors },
-        });
-      }
-
-      const user = await IDENTITY_SERVICE.updateApplicationUser(authIdentity.clerkId, parsed.data);
-      return res.status(200).json({
-        success: true,
-        data: user,
-        error: null,
-      });
-    } catch (err) {
-      return next(err);
+      const updatedUser = await IDENTITY_SERVICE.updateCurrentUser(req.user!.id, req.body);
+      res.status(200).json({ success: true, data: updatedUser, error: null });
+    } catch (error) {
+      next(error);
     }
   },
 };
