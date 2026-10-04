@@ -27,6 +27,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CLIENT_URL: z.string().url(),
+  CLERK_SECRET_KEY: z.string().min(1).optional(),
 });
 
-envSchema.safeParse(config);
+export const parsedConfig = envSchema.parse(config);

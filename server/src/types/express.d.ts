@@ -1,1 +1,14 @@
-// Express type augmentations (e.g. req.auth, req.user)
+import type { UserRole } from './index';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role?: UserRole;
+      };
+    }
+  }
+}
+
+export {};

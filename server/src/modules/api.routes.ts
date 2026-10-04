@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import identityRoutes from './identity/identity.routes';
 
 const apiRoutes = Router();
 
@@ -7,8 +8,7 @@ apiRoutes.get('/health', (req, res) => {
   res.status(200).json({ success: true, data: { status: 'api ok' }, error: null });
 });
 
-// Import and use module routes here
-// apiRoutes.use('/identity', identityRoutes);
+apiRoutes.use('/identity', identityRoutes);
 // apiRoutes.use('/businesses', businessRoutes);
 
 export default apiRoutes;

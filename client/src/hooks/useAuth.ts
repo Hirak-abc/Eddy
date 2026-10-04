@@ -1,15 +1,17 @@
-// Mocked for foundation; will integrate with @clerk/clerk-react
+import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
+import type { UserRole } from '../types';
+
 export const useAuth = () => {
-  // For testing: allow role override via query param ?role=owner|customer
-  const urlParams = new URLSearchParams(window.location.search);
-  const roleParam = urlParams.get('role');
-  const userRole = (roleParam === 'OWNER' || roleParam === 'CUSTOMER')
-    ? roleParam as 'OWNER' | 'CUSTOMER'
-    : 'OWNER';
+  const { isLoaded, isSignedIn, getToken } = useClerkAuth();
+  const { user } = useUser();
+  const role = user?.publicMetadata?.role;
+  const userRole: UserRole | undefined =
+    role === 'OWNER' || role === 'CUSTOMER' || role === 'ADMIN' ? role : undefined;
 
   return {
-    isLoaded: true,
-    isSignedIn: true, // Mocked to true to test layout
+    isLoaded,
+    isSignedIn: Boolean(isSignedIn),
     userRole,
+    getToken,
   };
 };

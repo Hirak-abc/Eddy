@@ -1,8 +1,10 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ROUTES } from '../lib/constants';
 import { LandingPage } from '../pages/LandingPage';
 import { SignInPage } from '../pages/auth/SignInPage';
 import { SignUpPage } from '../pages/auth/SignUpPage';
+import { CompleteSignupPage } from '../pages/auth/CompleteSignupPage';
+import { CompleteLoginPage } from '../pages/auth/CompleteLoginPage';
 import { OwnerLayout } from '../layouts/OwnerLayout';
 import { DashboardPage } from '../pages/owner/DashboardPage';
 import { OnboardingPage } from '../pages/owner/OnboardingPage';
@@ -37,8 +39,10 @@ import { ProtectedRoute } from './ProtectedRoute';
 export const router = createBrowserRouter([
   // Public
   { path: ROUTES.HOME, element: <LandingPage /> },
-  { path: ROUTES.SIGN_IN, element: <SignInPage /> },
-  { path: ROUTES.SIGN_UP, element: <SignUpPage /> },
+  { path: `${ROUTES.SIGN_IN}/*`, element: <SignInPage /> },
+  { path: `${ROUTES.SIGN_UP}/*`, element: <SignUpPage /> },
+  { path: '/complete-signup', element: <CompleteSignupPage /> },
+  { path: '/complete-login', element: <CompleteLoginPage /> },
 
   // Protected Owner
   {
@@ -49,6 +53,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'onboarding', element: <OnboardingPage /> },
       { path: 'trend-flyers', element: <TrendFlyersPage /> },
@@ -80,6 +85,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <Navigate to="home" replace /> },
       { path: 'home', element: <HomePage /> },
       { path: 'discover', element: <ShopDiscoveryPage /> },
       { path: 'shop', element: <ShopEnvironmentPage /> },

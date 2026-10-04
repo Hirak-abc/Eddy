@@ -1,1 +1,1 @@
-// Shared backend types
+export type UserRole = 'OWNER' | 'CUSTOMER' | 'ADMIN';
