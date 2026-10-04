@@ -577,255 +577,140 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   // ============================================
 
   const handleClerkSuccess = useCallback(
-
-    async () => {
-
+    async (sessionId?: string | null) => {
       if (syncStartedRef.current) {
-
+        console.log('[AUTH] handleClerkSuccess skipped: already running');
         return;
-
       }
 
       syncStartedRef.current = true;
+      console.log('[AUTH] handleClerkSuccess START', {
+        sessionId: sessionId ?? null,
+        isSignUp,
+        role,
+      });
 
       try {
-
-        // ----------------------------------------
-
-        // 1. Activate Clerk session
-
-        // ----------------------------------------
-
+        // 1. Activate the exact session returned by Clerk.
         const pendingSessionId =
-
-          signUp?.status === 'complete'
-
+          sessionId ??
+          (signUp?.status === 'complete'
             ? signUp.createdSessionId
+            : signIn?.status === 'complete'
+              ? signIn.createdSessionId
+              : null);
 
-            : null;
+        console.log('[AUTH] session to activate:', pendingSessionId);
 
-        if (pendingSessionId) {
-
-          await clerk.setActive({
-
-            session: pendingSessionId,
-
-          });
-
-        } else if (
-
-          signIn?.status === 'complete'
-
-        ) {
-
-          await clerk.setActive({
-
-            session: signIn.createdSessionId,
-
-          });
-
+        if (!pendingSessionId) {
+          throw new Error('Clerk returned no created session ID after successful authentication.');
         }
 
-        // ----------------------------------------
+        await clerk.setActive({ session: pendingSessionId });
+        console.log('[AUTH] Clerk session activated');
 
-        // 2. Get Clerk token
+        // Clerk state/token propagation can take a tick after setActive().
+        // Retry briefly instead of immediately treating a temporary null token as failure.
+        let token: string | null = null;
+        for (let attempt = 1; attempt <= 5; attempt += 1) {
+          token = await getToken({ skipCache: true });
+          console.log(`[AUTH] getToken attempt ${attempt}:`, token ? 'TOKEN_OK' : 'NO_TOKEN');
 
-        // ----------------------------------------
+          if (token) break;
 
-        const token = await getToken();
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
 
         if (!token) {
-
-          syncStartedRef.current = false;
-
-          toast.error(
-
-            'Your session could not be established. Please sign in again.'
-
-          );
-
-          return;
-
+          throw new Error('Clerk session was activated, but no authentication token was available.');
         }
 
-        // ----------------------------------------
-
-        // 3. Sync with backend / Convex
-
-        // ----------------------------------------
-
+        // 2. Ask the backend for the authoritative application user/role.
         const roleQuery =
-
           isSignUp && role
-
             ? `?role=${encodeURIComponent(role)}`
-
             : '';
 
-        const resp = await fetch(
+        const meUrl = `${API_BASE_URL}/me${roleQuery}`;
+        console.log('[AUTH] GET /me:', meUrl);
 
-          `${API_BASE_URL}/me${roleQuery}`,
+        const resp = await fetch(meUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        });
 
-          {
+        const rawBody = await resp.text();
+        console.log('[AUTH] /me response:', resp.status, rawBody);
 
-            headers: {
-
-              Authorization: `Bearer ${token}`,
-
-            },
-
-          }
-
-        );
-
-        const payload =
-
-          (await resp.json()) as {
-
-            success?: boolean;
-
-            data?: {
-
-              role?: AuthRole;
-
-            };
-
-            error?: {
-
-              code?: string;
-
-              message?: string;
-
-            };
-
+        let payload: {
+          success?: boolean;
+          data?: {
+            role?: AuthRole;
           };
+          error?: {
+            code?: string;
+            message?: string;
+          };
+        };
 
-        if (
-
-          !resp.ok ||
-
-          !payload?.success
-
-        ) {
-
-          syncStartedRef.current = false;
-
-          toast.error(
-
-            payload?.error?.message ??
-
-              'We could not finish setting up your account. Please try again.'
-
+        try {
+          payload = JSON.parse(rawBody) as typeof payload;
+        } catch {
+          throw new Error(
+            `Backend /me returned ${resp.status}, but the response was not valid JSON.`
           );
-
-          return;
-
         }
 
-        // ----------------------------------------
-
-        // 4. Get backend role
-
-        // ----------------------------------------
-
-        const backendRole =
-
-          payload.data?.role;
-
-        if (
-
-          backendRole !== 'OWNER' &&
-
-          backendRole !== 'CUSTOMER'
-
-        ) {
-
-          syncStartedRef.current = false;
-
-          toast.error(
-
-            'Your account role is missing. Please contact support.'
-
+        if (!resp.ok || !payload.success) {
+          throw new Error(
+            payload.error?.message ??
+              `Backend authentication failed (${resp.status}).`
           );
-
-          return;
-
         }
 
-        // ----------------------------------------
+        const backendRole = payload.data?.role;
+        console.log('[AUTH] backend role:', backendRole);
 
-        // 5. Save role/cache
-
-        // ----------------------------------------
-
-        if (role) {
-
-          saveAuthRole(role);
-
+        if (backendRole !== 'OWNER' && backendRole !== 'CUSTOMER') {
+          throw new Error(
+            `Backend returned an invalid/missing role: ${String(backendRole)}`
+          );
         }
 
+        // 3. Persist the authoritative role and clear stale cached user data.
+        saveAuthRole(backendRole);
         clearApplicationUserCache();
 
-        // ----------------------------------------
+        // 4. Finally navigate to the role-specific dashboard.
+        const destination = getPostAuthPath(backendRole);
+        console.log('[AUTH] dashboard destination:', destination);
 
-        // 6. Go to dashboard
-
-        // ----------------------------------------
-
-        toast.success(
-
-          isSignUp
-
-            ? 'Account ready — heading in'
-
-            : 'Signed in'
-
-        );
-
-        navigate(
-
-          getPostAuthPath(backendRole),
-
-          {
-
-            replace: true,
-
-          }
-
-        );
-
-      } catch {
-
+        toast.success(isSignUp ? 'Account ready — heading in' : 'Signed in');
+        navigate(destination, { replace: true });
+        console.log('[AUTH] navigation completed');
+      } catch (error) {
         syncStartedRef.current = false;
+        console.error('[AUTH] handleClerkSuccess FAILED:', error);
 
         toast.error(
-
-          'We could not finish signing you in. Please try again.'
-
+          error instanceof Error
+            ? error.message
+            : 'We could not finish signing you in. Please try again.'
         );
-
       }
-
     },
-
     [
-
       role,
-
       isSignUp,
-
       getToken,
-
       navigate,
-
       clerk,
-
       signUp,
-
       signIn,
-
     ]
-
   );
 
   // ============================================
@@ -1272,6 +1157,8 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       async (data) => {
 
+        console.log('[DEBUG] onEmailSignInSubmit called, data:', data);
+
         if (
 
           !signInLoaded ||
@@ -1346,13 +1233,9 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
             });
 
-          console.log(
+          console.log('[DEBUG] Sign-in result status:', signInResult.status);
 
-            'CLERK SIGN-IN STATUS:',
-
-            signInResult.status
-
-          );
+          // Complete means sign-in has succeeded
 
           if (
 
@@ -1362,11 +1245,17 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
           ) {
 
-            await handleClerkSuccess();
+            console.log('[DEBUG] Sign-in complete, calling handleClerkSuccess');
+
+            await handleClerkSuccess(signInResult.createdSessionId);
+
+            console.log('[DEBUG] handleClerkSuccess returned');
 
             return;
 
           }
+
+          // Handle OTP verification for email code
 
           if (
 
@@ -1426,85 +1315,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
           }
 
-          if (
-
-            signInResult.status ===
-
-            'needs_client_trust'
-
-          ) {
-
-            const emailFactor =
-
-              signInResult.supportedSecondFactors?.find(
-
-                (factor) =>
-
-                  factor.strategy ===
-
-                  'email_code'
-
-              );
-
-            if (!emailFactor) {
-
-              throw new Error(
-
-                'Additional verification is required, but email verification is not available.'
-
-              );
-
-            }
-
-            const signInWithMfa =
-
-              signInResult as typeof signInResult & {
-
-                mfa?: {
-
-                  sendEmailCode?: () => Promise<unknown>;
-
-                };
-
-              };
-
-            if (!signInWithMfa.mfa?.sendEmailCode) {
-
-              throw new Error(
-
-                'Clerk email verification is not available in the installed Clerk SDK. Please update @clerk/clerk-react.'
-
-              );
-
-            }
-
-            await signInWithMfa.mfa.sendEmailCode();
-
-            setPendingEmail(data.email);
-
-            setVerificationType('email');
-
-            setVerificationStep(true);
-
-            setOtpResendCooldown(60);
-
-            toast.success(
-
-              'Verification code sent to your email.'
-
-            );
-
-            return;
-
-          }
-
-          console.error(
-
-            'SIGN-IN NOT COMPLETE:',
-
-            signInResult
-
-          );
+          // Other status - show error
 
           toast.error(
 
@@ -1513,6 +1324,8 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           );
 
         } catch (error) {
+
+          console.error('[DEBUG] Sign-in error:', error);
 
           handleClerkError(
 
@@ -1638,53 +1451,11 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
                 );
 
-            } else if (
-
-              signIn.status ===
-
-              'needs_client_trust'
-
-            ) {
-
-              const signInWithMfa =
-
-                signIn as typeof signIn & {
-
-                  mfa?: {
-
-                    verifyEmailCode?: (params: {
-
-                      code: string;
-
-                    }) => Promise<typeof signIn>;
-
-                  };
-
-                };
-
-              if (!signInWithMfa.mfa?.verifyEmailCode) {
-
-                throw new Error(
-
-                  'Clerk email verification is not available in the installed Clerk SDK. Please update @clerk/clerk-react.'
-
-                );
-
-              }
-
-              result =
-
-                await signInWithMfa.mfa.verifyEmailCode({
-
-                  code: data.otp,
-
-                });
-
             } else {
 
               throw new Error(
 
-                `Sign-in verification cannot continue. Current status: ${signIn.status}`
+                'Additional verification is required to finish signing in.'
 
               );
 
@@ -1701,116 +1472,45 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           // ======================================
 
           if (
-
             result?.status ===
-
             'complete'
-
           ) {
+            console.log('[AUTH] Verification complete:', result);
 
-            console.log(
-
-              'VERIFICATION RESULT:',
-
-              result
-
-            );
-
-            if (signIn && !signUp) {
-
-              toast.success(
-
-                'Verification successful. Signing you in...'
-
-              );
-
-              setVerificationStep(false);
-
-              setPendingEmail('');
-
-              otpForm.reset();
-
-              await handleClerkSuccess();
-
+            // Sign-in OTP: keep the newly created Clerk session active
+            // and continue directly to the correct dashboard.
+            if (!isSignUp) {
+              await handleClerkSuccess(result.createdSessionId);
               return;
-
             }
 
+            // Sign-up OTP: verification only. The intended flow is
+            // Verify Email -> Sign In -> Dashboard.
             toast.success(
-
               'Email verified successfully. Please sign in.'
-
             );
-
-            // Signup verification creates a temporary session.
-            // Sign out and return to the sign-in page.
 
             if (signOut) {
-
               try {
-
                 await signOut();
-
               } catch {
-
-                // Ignore sign-out error here.
-
-                // Navigation to sign-in still happens.
-
+                // Ignore sign-out errors after successful verification.
               }
-
             }
 
-            // Reset sync guard because user
-
-            // must now perform a fresh sign-in.
-
-            syncStartedRef.current =
-
-              false;
-
-            // Reset verification UI
-
-            setVerificationStep(
-
-              false
-
-            );
-
+            syncStartedRef.current = false;
+            setVerificationStep(false);
             setPendingEmail('');
-
             otpForm.reset();
-
-            // Clear any saved signup form state
-
             emailForm.reset({
-
-              email:
-
-                pendingEmail,
-
-              password:
-
-                '',
-
+              email: pendingEmail,
+              password: '',
             });
 
-            // Go to SIGN-IN page
-
-            navigate(
-
-              ROUTES.SIGN_IN,
-
-              {
-
-                replace: true,
-
-              }
-
-            );
-
+            navigate(ROUTES.SIGN_IN, {
+              replace: true,
+            });
             return;
-
           }
 
           // ======================================
@@ -1927,7 +1627,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       }
 
-      if (!signUp && !signIn) {
+      if (!signUp) {
 
         toast.error(
 
@@ -1943,47 +1643,17 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       try {
 
-        if (signUp) {
+        await signUp.prepareEmailAddressVerification(
 
-          await signUp.prepareEmailAddressVerification(
+          {
 
-            {
+            strategy:
 
-              strategy:
-
-                'email_code',
-
-            }
-
-          );
-
-        } else if (signIn) {
-
-          const signInWithMfa =
-
-            signIn as typeof signIn & {
-
-              mfa?: {
-
-                sendEmailCode?: () => Promise<unknown>;
-
-              };
-
-            };
-
-          if (!signInWithMfa.mfa?.sendEmailCode) {
-
-            throw new Error(
-
-              'Clerk email verification is not available in the installed Clerk SDK. Please update @clerk/clerk-react.'
-
-            );
+              'email_code',
 
           }
 
-          await signInWithMfa.mfa.sendEmailCode();
-
-        }
+        );
 
         setOtpResendCooldown(
 

@@ -37,6 +37,7 @@ export const IDENTITY_CONTROLLER = {
       }
 
       const user = await IDENTITY_SERVICE.getOrCreateApplicationUser(authIdentity.clerkId, validatedRole);
+      console.log('[DEBUG /me] returning user:', JSON.stringify(user));
       return res.status(200).json({
         success: true,
         data: user,
