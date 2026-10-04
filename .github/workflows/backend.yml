@@ -4,9 +4,17 @@ on:
   push:
     paths:
       - 'server/**'
+      # The server talks to Convex through ./convex, so a schema or function
+      # change must be type checked and tested here too.
+      - 'convex/**'
+      - 'package.json'
+      - 'package-lock.json'
   pull_request:
     paths:
       - 'server/**'
+      - 'convex/**'
+      - 'package.json'
+      - 'package-lock.json'
 jobs:
   build:
     runs-on: ubuntu-latest

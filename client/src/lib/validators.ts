@@ -6,6 +6,23 @@ export const updateProfileSchema = z.object({
   phone: z.string().max(15).optional(),
 });
 
+export const emailAuthSchema = z.object({
+  email: z.string().email('Enter a valid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine(
+      (pwd) => /[a-zA-Z]/.test(pwd) || /[0-9]/.test(pwd),
+      'Password must contain at least one letter or number'
+    ),
+});
+
+export const phoneAuthSchema = z.object({
+  phone: z
+    .string()
+    .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
+});
+
 // ── Business ─────────────────────────────────────────
 export const createBusinessSchema = z.object({
   name: z.string().min(2, 'Business name is required').max(200),
@@ -34,6 +51,8 @@ export const submitReviewSchema = z.object({
   comment: z.string().max(1000).optional(),
 });
 
+export type EmailAuthInput = z.infer<typeof emailAuthSchema>;
+export type PhoneAuthInput = z.infer<typeof phoneAuthSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
 export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;

@@ -12,9 +12,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        // Must match the port the Express server actually binds. server/.env
+        // sets PORT=5001 (5000 is taken by macOS AirPlay Receiver on this
+        // machine). Override with VITE_DEV_API_TARGET if your port differs.
+        target: process.env.VITE_DEV_API_TARGET ?? 'http://localhost:5001',
         changeOrigin: true,
       },
     },
