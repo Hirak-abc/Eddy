@@ -4,13 +4,9 @@ on:
   push:
     paths:
       - 'client/**'
-      - 'package.json'
-      - 'package-lock.json'
   pull_request:
     paths:
       - 'client/**'
-      - 'package.json'
-      - 'package-lock.json'
 jobs:
   build:
     runs-on: ubuntu-latest

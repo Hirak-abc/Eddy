@@ -26,9 +26,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Zip files
-*.zip
-
 # Testing
 coverage/
 
