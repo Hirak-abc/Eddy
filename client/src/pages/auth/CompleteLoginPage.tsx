@@ -4,6 +4,7 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { ROUTES } from '../../lib/constants';
 import type { UserRole } from '../../types';
 import { api } from '../../services/api';
+import { AuthStatusScreen } from './AuthStatusScreen';
 
 export const CompleteLoginPage = () => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -55,9 +56,9 @@ export const CompleteLoginPage = () => {
     void completeLogin();
   }, [isLoaded, isSignedIn, navigate, requestedRole, user]);
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) return <AuthStatusScreen message="Loading…" />;
   if (!isSignedIn) return <Navigate to={ROUTES.SIGN_IN} replace />;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (error) return <AuthStatusScreen message="" error={error} />;
 
-  return <div>Opening your dashboard...</div>;
+  return <AuthStatusScreen message="Opening your dashboard…" />;
 };
