@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { ROUTES } from '../../lib/constants';
 import type { UserRole } from '../../types';
+import { AuthStatusScreen } from './AuthStatusScreen';
 
 export const CompleteSignupPage = () => {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -35,9 +36,9 @@ export const CompleteSignupPage = () => {
     void assignRole();
   }, [getToken, isLoaded, isSignedIn, navigate, role, user]);
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) return <AuthStatusScreen message="Loading…" />;
   if (!isSignedIn) return <Navigate to={ROUTES.SIGN_IN} replace />;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (error) return <AuthStatusScreen message="" error={error} />;
 
-  return <div>Setting up your account...</div>;
+  return <AuthStatusScreen message="Setting up your account…" />;
 };

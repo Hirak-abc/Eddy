@@ -37,6 +37,7 @@ export interface FlyerVersion {
   imageUrl: string;
   caption: string;
   hashtags: string[];
+  status?: string;
   createdAt: string;
 }
 
