@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Sparkles,
   Plus,
-  Calendar,
   Clock,
   Send,
   Eye,
@@ -11,9 +10,6 @@ import {
   TrendingUp,
   Flame,
   CheckCircle2,
-  Instagram,
-  Facebook,
-  Share2,
 } from 'lucide-react';
 import { useOwner, type ExtendedFlyer } from '@/context/OwnerContext';
 import { ROUTES } from '@/lib/constants';

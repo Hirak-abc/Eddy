@@ -3,14 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   CheckCircle2,
   Eye,
-  Heart,
-  Share2,
   Ticket,
   Instagram,
   Facebook,
-  TrendingUp,
   Plus,
-  ExternalLink,
 } from 'lucide-react';
 import { useOwner, type ExtendedFlyer } from '@/context/OwnerContext';
 import { ROUTES } from '@/lib/constants';
@@ -18,14 +14,14 @@ import { Button } from '@/components/ui/Button';
 import { FlyerLightboxModal } from '@/components/FlyerLightboxModal';
 
 export const PublishedFlyersPage = () => {
-  const { flyers } = useOwner();
+  const { publishedFlyers: flyers } = useOwner();
   const [selectedFlyer, setSelectedFlyer] = useState<ExtendedFlyer | null>(null);
 
-  const publishedFlyers = flyers.filter((f) => f.status === 'PUBLISHED');
+  const publishedFlyers = flyers.filter((f: ExtendedFlyer) => f.status === 'PUBLISHED');
 
-  const totalReach = publishedFlyers.reduce((acc, f) => acc + (f.stats?.reach || 0), 0);
-  const totalLikes = publishedFlyers.reduce((acc, f) => acc + (f.stats?.likes || 0), 0);
-  const totalRedeemed = publishedFlyers.reduce((acc, f) => acc + (f.stats?.couponsRedeemed || 0), 0);
+  const totalReach = publishedFlyers.reduce((acc: number, f: ExtendedFlyer) => acc + (f.stats?.reach || 0), 0);
+  const totalLikes = publishedFlyers.reduce((acc: number, f: ExtendedFlyer) => acc + (f.stats?.likes || 0), 0);
+  const totalRedeemed = publishedFlyers.reduce((acc: number, f: ExtendedFlyer) => acc + (f.stats?.couponsRedeemed || 0), 0);
 
   return (
     <div className="space-y-6 pb-12">
@@ -87,7 +83,7 @@ export const PublishedFlyersPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {publishedFlyers.map((flyer) => (
+          {publishedFlyers.map((flyer: ExtendedFlyer) => (
             <div
               key={flyer.id}
               className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"

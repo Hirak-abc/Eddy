@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { UserButton, useUser } from '@clerk/clerk-react';
+import { UserButton } from '@clerk/clerk-react';
 import {
   Menu,
   X,
   Sparkles,
   Store,
   CheckCircle2,
-  Bell,
   Clock,
   ExternalLink,
   ChevronRight,
-  ShieldCheck,
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { OwnerProvider, useOwner } from '../context/OwnerContext';
@@ -19,8 +17,7 @@ import { ROUTES } from '../lib/constants';
 import { Button } from '../components/ui/Button';
 
 const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
-  const { business, toggleAutoPublish, trendFlyer, transactions } = useOwner();
-  const { user } = useUser();
+  const { business, toggleAutoPublish, transactions } = useOwner();
   const navigate = useNavigate();
 
   const pendingRequests = transactions.filter((t) => t.status === 'PENDING');
@@ -51,7 +48,9 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
               <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
                 {business.name}
               </span>
-              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" title="Verified Business" />
+              <span title="Verified Business" className="inline-flex">
+                <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+              </span>
             </div>
             <span className="text-[10px] text-slate-500 font-medium truncate max-w-[140px] sm:max-w-[180px]">
               {business.category}

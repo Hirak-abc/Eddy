@@ -1,16 +1,10 @@
 import { useState, useRef } from 'react';
 import {
-  QrCode,
-  Download,
   Printer,
   Sparkles,
   ShieldCheck,
-  Eye,
   Check,
   Copy,
-  ExternalLink,
-  Store,
-  Layers,
   FileDown,
 } from 'lucide-react';
 import { toast } from 'sonner';

@@ -412,7 +412,7 @@ export const DashboardPage = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-sm text-slate-900">
-                          {tx.metadata?.customerName || 'Customer'}
+                          {(tx.metadata?.customerName as string | undefined) || 'Customer'}
                         </span>
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-200/60 text-amber-900">
                           {tx.type === 'COIN_REDEMPTION' ? `${tx.coinAmount} Coins` : 'Coupon Deal'}
@@ -420,7 +420,7 @@ export const DashboardPage = () => {
                       </div>
                       <div className="text-xs text-slate-600 flex items-center gap-3">
                         <span>Discount: <strong>₹{tx.amount}</strong></span>
-                        {tx.metadata?.billAmount && <span>Bill: ₹{tx.metadata.billAmount}</span>}
+                        {(tx.metadata?.billAmount as number | undefined) ? <span>Bill: ₹{tx.metadata?.billAmount as number}</span> : null}
                       </div>
                     </div>
 
@@ -428,7 +428,7 @@ export const DashboardPage = () => {
                       <button
                         onClick={() => {
                           approveTransaction(tx.id);
-                          toast.success(`Approved ₹${tx.amount} discount for ${tx.metadata?.customerName || 'customer'}`);
+                          toast.success(`Approved ₹${tx.amount} discount for ${(tx.metadata?.customerName as string | undefined) || 'customer'}`);
                         }}
                         className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors"
                       >
@@ -564,10 +564,10 @@ export const DashboardPage = () => {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-900">
-                        {item.metadata?.customerName || 'Customer'}
+                        {(item.metadata?.customerName as string | undefined) || 'Customer'}
                       </div>
                       <div className="text-[10px] text-slate-500">
-                        {item.type === 'COIN_REDEMPTION' ? 'Eddy Coins Redeemed' : `Coupon: ${item.metadata?.couponCode}`}
+                        {item.type === 'COIN_REDEMPTION' ? 'Eddy Coins Redeemed' : `Coupon: ${(item.metadata?.couponCode as string | undefined) ?? ''}`}
                       </div>
                     </div>
                   </div>

@@ -31,9 +31,6 @@ export const RewardsPage = () => {
     { id: '6', label: 'Better Luck', type: 'NONE', value: 0, weight: 5, color: 'bg-slate-400 text-white' },
   ]);
 
-  const [streakMilestoneBonus, setStreakMilestoneBonus] = useState('10');
-  const [dailyScanLimit, setDailyScanLimit] = useState('3');
-
   const totalWeight = wedges.reduce((acc, w) => acc + (Number(w.weight) || 0), 0);
   const isValidWeight = totalWeight === 100;
 

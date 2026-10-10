@@ -45,6 +45,8 @@ export interface SocialAccountState {
 export interface ExtendedFlyer extends Flyer {
   title?: string;
   category?: string;
+  content?: string;
+  scheduledFor?: string;
   stats?: {
     reach: number;
     impressions: number;
@@ -617,7 +619,10 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  const [socialAccounts, setSocialAccounts] = useState(() => {
+  const [socialAccounts, setSocialAccounts] = useState<{
+    instagram: SocialAccountState;
+    facebook: SocialAccountState;
+  }>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_socialAccounts`);
       return saved ? JSON.parse(saved) : defaultSocialAccounts;

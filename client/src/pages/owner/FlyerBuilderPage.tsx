@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
-  Upload,
   Ticket,
   Clock,
   Send,
   Calendar,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2,
   Instagram,
   Facebook,
   Wand2,

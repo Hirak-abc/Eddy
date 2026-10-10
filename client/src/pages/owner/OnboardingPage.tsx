@@ -4,20 +4,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Store,
   Sparkles,
-  Upload,
-  CheckCircle2,
   ArrowRight,
   ArrowLeft,
-  QrCode,
-  Zap,
   Check,
-  Building2,
   Clock,
   Instagram,
   Facebook,
-  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOwner } from '@/context/OwnerContext';
@@ -52,10 +45,9 @@ export const OnboardingPage = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingSchema),
+    resolver: zodResolver(onboardingSchema) as never,
     defaultValues: {
       name: 'The Royal Chai & Cafe',
       category: 'Cafe & Bakery',
@@ -74,7 +66,7 @@ export const OnboardingPage = () => {
       location: data.location,
       phone: data.phone,
       email: data.email,
-      autoPublish: data.autoPublish,
+      autoPublish: data.autoPublish ?? true,
       verificationStatus: 'VERIFIED',
     });
 
@@ -322,7 +314,7 @@ export const OnboardingPage = () => {
 
         {/* STEP 3: Automation & Auto-Publish */}
         {currentStep === 3 && (
-          <form onSubmit={handleSubmit(handleFinishOnboarding)} className="space-y-5">
+          <form onSubmit={handleSubmit(handleFinishOnboarding as never)} className="space-y-5">
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-lg font-bold text-slate-900">Step 3: AI Marketing Automation</h2>
               <p className="text-xs text-slate-500">Configure how Eddy creates and schedules flyers automatically.</p>

@@ -6,12 +6,10 @@ import {
   Share2,
   Calendar,
   Ticket,
-  Eye,
   Heart,
   MessageCircle,
   Sparkles,
   Send,
-  ExternalLink,
 } from 'lucide-react';
 import type { ExtendedFlyer } from '@/context/OwnerContext';
 import { Button } from '@/components/ui/Button';

@@ -2,11 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Clock,
-  Sparkles,
   Send,
   Eye,
   Trash2,
-  Calendar,
   Ticket,
   Plus,
   Info,
@@ -19,10 +17,10 @@ import { Button } from '@/components/ui/Button';
 import { FlyerLightboxModal } from '@/components/FlyerLightboxModal';
 
 export const ScheduledFlyersPage = () => {
-  const { flyers, publishFlyerNow, deleteFlyer } = useOwner();
+  const { scheduledFlyers: flyers, publishFlyerNow, deleteFlyer } = useOwner();
   const [selectedFlyer, setSelectedFlyer] = useState<ExtendedFlyer | null>(null);
 
-  const scheduledFlyers = flyers.filter((f) => f.status === 'SCHEDULED');
+  const scheduledFlyers = flyers.filter((f: ExtendedFlyer) => f.status === 'SCHEDULED');
 
   return (
     <div className="space-y-6 pb-12">
@@ -78,7 +76,7 @@ export const ScheduledFlyersPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {scheduledFlyers.map((flyer) => (
+          {scheduledFlyers.map((flyer: ExtendedFlyer) => (
             <div
               key={flyer.id}
               className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
