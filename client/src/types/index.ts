@@ -25,9 +25,11 @@ export interface Business {
   name: string;
   category: string;
   location: string;
+  address?: string;
   phone?: string;
   email?: string;
   description?: string;
+  hours?: string;
   images: BusinessImages;
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
   autoPublish: boolean;

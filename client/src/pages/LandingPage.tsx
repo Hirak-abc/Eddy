@@ -1,7 +1,13 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../lib/constants';
-import { Button } from '@/components/ui/Button';
+import { Navbar } from '../components/landing/Navbar';
+import { HeroSection } from '../components/landing/HeroSection';
+import { FeaturesSection } from '../components/landing/FeaturesSection';
+import { GenerationWorkflow } from '../components/landing/GenerationWorkflow';
+import { FlyerGallery } from '../components/landing/FlyerGallery';
+import { TestimonialsSection } from '../components/landing/TestimonialsSection';
+import { CTAFooter } from '../components/landing/CTAFooter';
 
 export const LandingPage = () => {
   const { isLoaded, isSignedIn, userRole } = useAuth();
@@ -16,26 +22,17 @@ export const LandingPage = () => {
   if (isSignedIn) return <div>Loading account...</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 gap-6">
-      <h1 className="text-5xl font-extrabold text-indigo-700">Eddy</h1>
-      <p className="text-xl text-slate-600">Marketing & Rewards for Local Businesses</p>
-
-      <div className="flex gap-4">
-        <Button asChild size="lg">
-          <Link to={`${ROUTES.SIGN_UP}?role=OWNER`}>Business owner</Link>
-        </Button>
-        <Button asChild size="lg" variant="secondary">
-          <Link to={`${ROUTES.SIGN_UP}?role=CUSTOMER`}>Customer</Link>
-        </Button>
-      </div>
-      <div className="flex gap-4 text-sm">
-        <Link className="text-indigo-700 underline" to={`${ROUTES.SIGN_IN}?role=OWNER`}>
-          Sign in as business owner
-        </Link>
-        <Link className="text-indigo-700 underline" to={`${ROUTES.SIGN_IN}?role=CUSTOMER`}>
-          Sign in as customer
-        </Link>
-      </div>
+    <div className="bg-white">
+      <Navbar />
+      <main className="pt-16">
+        <HeroSection />
+        <FeaturesSection />
+        <GenerationWorkflow />
+        <FlyerGallery />
+        <TestimonialsSection />
+        <CTAFooter />
+      </main>
     </div>
+    
   );
 };
