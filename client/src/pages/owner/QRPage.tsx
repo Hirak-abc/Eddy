@@ -130,7 +130,7 @@ export const QRPage = () => {
               ].map((fmt) => (
                 <button
                   key={fmt.id}
-                  onClick={() => setStandeeType(fmt.id as any)}
+                  onClick={() => setStandeeType(fmt.id as 'A6' | 'A5' | 'STICKER')}
                   className={`p-3 rounded-2xl border text-center transition-all ${
                     standeeType === fmt.id
                       ? 'border-blue-600 bg-blue-50/50 text-blue-900 font-bold shadow-2xs'

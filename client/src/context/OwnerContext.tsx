@@ -762,7 +762,7 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const publishFlyerNow = (flyerId: string) => {
-    let target = trendFlyer?.id === flyerId ? trendFlyer : scheduledFlyers.find((f) => f.id === flyerId);
+    const target = trendFlyer?.id === flyerId ? trendFlyer : scheduledFlyers.find((f) => f.id === flyerId);
     if (!target) return;
 
     const published: ExtendedFlyer = {
