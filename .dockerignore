@@ -1,0 +1,26 @@
+# Keep images small and prevent leaking secrets / host deps
+node_modules/
+dist/
+build/
+coverage/
+
+# Never bake real secrets into images (injected at runtime via env_file / environment)
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env.local
+
+# Git / local tooling / Convex dev data
+.git/
+.github/
+.vscode/
+.idea/
+.convex/
+convex/_generated/
+
+# Logs / OS noise
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
