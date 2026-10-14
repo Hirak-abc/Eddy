@@ -100,7 +100,7 @@ export const PrivacyPolicyPage = () => (
             <p className="text-sm text-slate-600">
               Reach the Eddy team at{' '}
               <a href="mailto:info@eddy.com" className="font-bold text-indigo-700 hover:underline">
-                info@eddy.com
+                thenightwingteam@gmail.com
               </a>{' '}
               for access, correction, or deletion requests.
             </p>
