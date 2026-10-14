@@ -6,6 +6,7 @@ import { CompleteLoginPage } from './pages/auth/CompleteLoginPage';
 import { CompleteSignupPage } from './pages/auth/CompleteSignupPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 // Owner pages
@@ -45,6 +46,7 @@ import { ShopEnvironmentPage } from './pages/customer/ShopEnvironmentPage';
 // Layouts
 import { OwnerLayout } from './layouts/OwnerLayout';
 import { CustomerLayout } from './layouts/CustomerLayout';
+import { FloatingThemeToggle } from './components/ThemeToggle';
 
 export const router = createBrowserRouter([
   // Public routes
@@ -229,7 +231,12 @@ export const router = createBrowserRouter([
   // Public shop route (accessed via QR)
   {
     path: '/shop/:businessId',
-    element: <ShopEnvironmentPage />,
+    element: (
+      <>
+        <FloatingThemeToggle />
+        <ShopEnvironmentPage />
+      </>
+    ),
     errorElement: <NotFoundPage />,
   },
 
@@ -237,6 +244,11 @@ export const router = createBrowserRouter([
   {
     path: '/privacy',
     element: <PrivacyPolicyPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/terms',
+    element: <TermsOfServicePage />,
     errorElement: <NotFoundPage />,
   },
 

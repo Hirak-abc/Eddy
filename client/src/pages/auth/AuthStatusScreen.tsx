@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Zap, Loader2, AlertCircle } from 'lucide-react';
+import { FloatingThemeToggle } from '@/components/ThemeToggle';
 import { ROUTES } from '../../lib/constants';
 import { AUTH_BG_IMAGE } from './authTheme';
 
@@ -10,6 +11,7 @@ interface AuthStatusScreenProps {
 
 export const AuthStatusScreen = ({ message, error }: AuthStatusScreenProps) => (
   <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08111f] p-6">
+    <FloatingThemeToggle />
     <img
       src={AUTH_BG_IMAGE}
       alt=""

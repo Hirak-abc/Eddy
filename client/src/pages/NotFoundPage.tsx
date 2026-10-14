@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Compass } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { FloatingThemeToggle } from '@/components/ThemeToggle';
 
 export const NotFoundPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <FloatingThemeToggle />
     <div className="text-center space-y-6 max-w-md">
       <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 flex items-center justify-center">
         <Compass size={28} className="text-amber-600" />

@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { OwnerProvider, useOwner } from '../context/OwnerContext';
 import { ROUTES } from '../lib/constants';
 import { Button } from '../components/ui/Button';
@@ -24,7 +25,7 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
   const pendingAmount = pendingRequests.reduce((sum, t) => sum + t.amount, 0);
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between shadow-xs">
+    <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between shadow-xs dark:border-slate-800 dark:bg-slate-900/95">
       {/* Left: Mobile Hamburger & Store Badge */}
       <div className="flex items-center gap-3">
         <button
@@ -116,6 +117,8 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
           <ExternalLink size={12} />
         </Link>
 
+        <ThemeToggle className="h-8 w-8" />
+
         {/* User Account / Clerk Avatar */}
         <div className="pl-1 border-l border-slate-200 flex items-center">
           <UserButton
@@ -137,7 +140,7 @@ export const OwnerLayout = () => {
 
   return (
     <OwnerProvider>
-      <div className="min-h-screen bg-slate-50 flex flex-row">
+      <div className="min-h-screen bg-slate-50 flex flex-row dark:bg-slate-950">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block">
           <Sidebar />
@@ -168,12 +171,17 @@ export const OwnerLayout = () => {
           <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
             <Outlet />
           </main>
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8">
+          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
             <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-xs text-slate-400 sm:flex-row">
               <p>© 2026 Eddy · AI marketing for local businesses</p>
-              <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
-                Privacy Policy
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
+                  Privacy Policy
+                </Link>
+                <Link to="/terms" className="font-semibold text-slate-500 hover:text-indigo-600">
+                  Terms of Service
+                </Link>
+              </div>
             </div>
           </footer>
         </div>
