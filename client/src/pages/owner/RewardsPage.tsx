@@ -114,7 +114,7 @@ export const RewardsPage = () => {
           <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1">
             <Flame size={13} /> Daily Scan & Streak
           </span>
-          <div className="text-2xl font-black text-indigo-600 font-mono">3 Scans / Day</div>
+          <div className="text-2xl font-black text-indigo-600 font-mono">100 Scans / Day</div>
           <p className="text-[11px] text-slate-400">3-day inactivity resets customer streak</p>
         </div>
       </div>

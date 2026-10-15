@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const config = {
-  PORT: process.env.PORT || 5000,
+  PORT: process.env.PORT || 5001,
   NODE_ENV: process.env.NODE_ENV || 'development',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
@@ -24,10 +24,11 @@ export const config = {
 
 // Validate critical configuration
 const envSchema = z.object({
-  PORT: z.coerce.number().default(5000),
+  PORT: z.coerce.number().default(5001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CLIENT_URL: z.string().url(),
   CLERK_SECRET_KEY: z.string().min(1).optional(),
+  CONVEX_URL: z.string().url().optional(),
 });
 
 export const parsedConfig = envSchema.parse(config);
