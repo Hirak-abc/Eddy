@@ -7,6 +7,7 @@ import { CompleteSignupPage } from './pages/auth/CompleteSignupPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { DataDeletionPage } from './pages/DataDeletionPage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 // Owner pages
@@ -249,6 +250,16 @@ export const router = createBrowserRouter([
   {
     path: '/terms',
     element: <TermsOfServicePage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/data-deletion',
+    element: <DataDeletionPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/data_deletion',
+    element: <DataDeletionPage />,
     errorElement: <NotFoundPage />,
   },
 

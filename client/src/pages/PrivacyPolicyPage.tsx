@@ -78,7 +78,11 @@ export const PrivacyPolicyPage = () => (
               <a href="mailto:info@eddy.com" className="font-bold text-indigo-700 hover:underline">
                 info@eddy.com
               </a>{' '}
-              for access, correction, or deletion requests.
+              for access, correction, or deletion requests. To delete your data, see our{' '}
+              <Link to="/data-deletion" className="font-bold text-indigo-700 hover:underline">
+                User Data Deletion page
+              </Link>
+              .
             </p>
           </div>
         </CardContent>
