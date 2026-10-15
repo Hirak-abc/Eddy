@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import identityRoutes from './identity/identity.routes';
+import socialRoutes from './social/social.routes';
 
 const apiRoutes = Router();
 
@@ -9,6 +10,7 @@ apiRoutes.get('/health', (req, res) => {
 });
 
 apiRoutes.use('/identity', identityRoutes);
+apiRoutes.use('/social', socialRoutes);
 // apiRoutes.use('/businesses', businessRoutes);
 
 export default apiRoutes;

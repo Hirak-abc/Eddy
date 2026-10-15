@@ -159,6 +159,7 @@ export const CTAFooter = () => {
               <ul className="space-y-2 text-xs text-black">
                 <li><Link to="/privacy" className="transition hover:underline">Privacy</Link></li>
                 <li><Link to="/terms" className="transition hover:underline">Terms</Link></li>
+                <li><Link to="/data-deletion" className="transition hover:underline">Data Deletion</Link></li>
                 <li><a href="#" className="transition hover:underline">Cookies</a></li>
               </ul>
             </div>

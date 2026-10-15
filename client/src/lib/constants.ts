@@ -33,6 +33,9 @@ export const ROUTES = {
   HOME: '/',
   SIGN_IN: '/sign-in',
   SIGN_UP: '/sign-up',
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
+  DATA_DELETION: '/data-deletion',
 
   // Owner
   OWNER_DASHBOARD: '/owner/dashboard',
