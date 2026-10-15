@@ -14,7 +14,7 @@ export const MIN_REDEMPTION_COINS = 50;
 export const MAX_WALLET_COINS = 100;
 
 // ── QR rules ─────────────────────────────────────────
-export const MAX_DAILY_SCANS = 3;
+export const MAX_DAILY_SCANS = 100;
 
 // ── Flyer / Coupon rules ─────────────────────────────
 export const COUPON_VALIDITY_HOURS = 96;

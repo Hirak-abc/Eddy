@@ -6,6 +6,8 @@ import type { UserRole } from '../../types';
 import { api } from '../../services/api';
 import { AuthStatusScreen } from './AuthStatusScreen';
 
+const ROLE_STORAGE_KEY = 'eddy_auth_role';
+
 export const CompleteLoginPage = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
@@ -13,8 +15,15 @@ export const CompleteLoginPage = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const hasStarted = useRef(false);
-  const requestedRole: UserRole =
-    searchParams.get('role') === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+
+  const paramRole = searchParams.get('role');
+  let requestedRole: UserRole = 'OWNER';
+  try {
+    const stored = sessionStorage.getItem(ROLE_STORAGE_KEY);
+    requestedRole = paramRole === 'CUSTOMER' ? 'CUSTOMER' : stored === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  } catch {
+    requestedRole = paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  }
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user || hasStarted.current) return;

@@ -3,9 +3,27 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { FloatingThemeToggle } from '@/components/ThemeToggle';
 import { AUTH_BG_IMAGE, authAppearance } from './authTheme';
 
+const ROLE_STORAGE_KEY = 'eddy_auth_role';
+
 export const SignUpPage = () => {
   const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  const paramRole = searchParams.get('role');
+
+  // Persist the role in sessionStorage when it arrives via query param so it
+  // survives Clerk's internal redirects (sso-callback, verify, etc.) that
+  // strip query parameters. On subsequent renders without the param we fall
+  // back to what was stored, defaulting to OWNER only as a last resort.
+  if (paramRole === 'CUSTOMER' || paramRole === 'OWNER') {
+    try { sessionStorage.setItem(ROLE_STORAGE_KEY, paramRole); } catch { /* private browsing */ }
+  }
+
+  let role: 'CUSTOMER' | 'OWNER' = 'OWNER';
+  try {
+    const stored = sessionStorage.getItem(ROLE_STORAGE_KEY);
+    role = stored === 'CUSTOMER' ? 'CUSTOMER' : paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  } catch {
+    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#08111f] p-6">

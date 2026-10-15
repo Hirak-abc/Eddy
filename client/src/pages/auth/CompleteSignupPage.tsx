@@ -6,6 +6,8 @@ import { ROUTES } from '../../lib/constants';
 import type { UserRole } from '../../types';
 import { AuthStatusScreen } from './AuthStatusScreen';
 
+const ROLE_STORAGE_KEY = 'eddy_auth_role';
+
 export const CompleteSignupPage = () => {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
@@ -13,7 +15,15 @@ export const CompleteSignupPage = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const hasStarted = useRef(false);
-  const role: UserRole = searchParams.get('role') === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+
+  const paramRole = searchParams.get('role');
+  let role: UserRole = 'OWNER';
+  try {
+    const stored = sessionStorage.getItem(ROLE_STORAGE_KEY);
+    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : stored === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  } catch {
+    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
+  }
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || hasStarted.current) return;
