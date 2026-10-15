@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Coins, Ticket, CheckCircle2, ChevronRight, ScanLine, Camera, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -17,9 +16,6 @@ const STEPS = [
 export const ScanPage = () => {
   const [phase, setPhase] = useState<'idle' | 'scanning' | 'done'>('idle');
   const [scansLeft, setScansLeft] = useState(100);
-  const [loading, setLoading] = useState(false);
-  const [lastReward, setLastReward] = useState<string>('+10 Coins Earned');
-  const [verifiedBusinessId, setVerifiedBusinessId] = useState<string>('sharma-sweets');
 
   // Real camera stream reference
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -67,48 +63,6 @@ export const ScanPage = () => {
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDetectQrCode = async (rawQrData: string) => {
-    if (loading || phase === 'done') return;
-
-    if (scansLeft <= 0) {
-      toast.error('Daily scan limit reached — come back tomorrow (Max 100 scans/day)');
-      stopCamera();
-      setPhase('idle');
-      return;
-    }
-
-    setLoading(true);
-    stopCamera();
-
-    // Extract businessId or shop token securely from URL or payload
-    // Example format: https://eddy.platform/shop/sharma-sweets or raw business ID
-    let extractedBusinessId = rawQrData.trim();
-    if (rawQrData.includes('/shop/')) {
-      const parts = rawQrData.split('/shop/');
-      extractedBusinessId = parts[1]?.split('/')[0] || 'sharma-sweets';
-    }
-
-    try {
-      const res = await qrService.scanQr(extractedBusinessId);
-      if (res.success && res.data) {
-        setPhase('done');
-        setScansLeft(res.data.scansLeft);
-        setVerifiedBusinessId(res.data.businessId);
-        setLastReward(`+${res.data.coinsAwarded} Coins Earned`);
-        toast.success(res.data.message);
-      } else {
-        setPhase('idle');
-        toast.error(res.error?.message || 'Invalid or unrecognized QR code');
-      }
-    } catch (err: any) {
-      setPhase('idle');
-      toast.error(err?.message || 'Failed to verify QR code on server');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleReset = () => {
@@ -202,12 +156,7 @@ export const ScanPage = () => {
 
           {phase === 'done' ? (
             <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <Button
-                asChild
-                className="bg-amber-500 font-bold text-white hover:bg-amber-600 rounded-xl"
-              >
-                <Link to={`/customer/shop/${verifiedBusinessId}`}>Open Shop & Spin</Link>
-              </Button>
+              <a href="#" onClick={(e) => { e.preventDefault(); }} className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-600">Open Shop & Spin</a>
               <Button
                 onClick={handleReset}
                 variant="outline"
@@ -232,11 +181,11 @@ export const ScanPage = () => {
           ) : (
             <Button
               onClick={startCamera}
-              disabled={loading || scansLeft <= 0}
+              disabled={scansLeft <= 0}
               className="mt-5 w-full bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-base font-extrabold text-white shadow-xl shadow-amber-500/20 transition-transform hover:scale-[1.02] disabled:opacity-70 rounded-2xl flex items-center justify-center gap-2"
             >
               <Camera size={20} />
-              <span>{loading ? 'Verifying Scan…' : 'Tap to Scan QR'}</span>
+              <span>Tap to Scan QR</span>
             </Button>
           )}
         </CardContent>
@@ -251,7 +200,7 @@ export const ScanPage = () => {
                 <Coins size={20} />
               </div>
               <div>
-                <div className="text-xl font-black text-amber-700">{lastReward}</div>
+                <div className="text-xl font-black text-amber-700">+10 Coins Earned</div>
                 <div className="text-xs font-bold text-amber-600">Added to wallet</div>
               </div>
             </CardContent>
@@ -285,12 +234,12 @@ export const ScanPage = () => {
               </div>
             </div>
           ))}
-          <Link
-            to="/customer/discover"
+          <a
+            href="/customer/discover"
             className="flex items-center justify-center gap-1 pt-1 text-sm font-bold text-amber-600 hover:text-amber-700"
           >
             Find shops near you <ChevronRight size={16} />
-          </Link>
+          </a>
         </CardContent>
       </Card>
     </div>
