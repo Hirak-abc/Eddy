@@ -10,7 +10,16 @@ export const QR_RULES = {
 
 export const FLYER_RULES = {
   COUPON_VALIDITY_HOURS: 96,
+  AUTO_PUBLISH_WINDOW_HOURS: 48,
 };
+
+export const META_OAUTH_SCOPES = [
+  'pages_show_list',
+  'pages_read_engagement',
+  'pages_manage_posts',
+  'instagram_basic',
+  'instagram_content_publish',
+].join(',');
 
 export const STREAK_RULES = {
   INACTIVE_DAYS_FOR_RESET: 3,
@@ -28,4 +37,9 @@ export const ERROR_CODES = {
   EXTERNAL_API_ERROR: 'EXTERNAL_API_ERROR',
   PAYMENT_ERROR: 'PAYMENT_ERROR',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  META_NOT_CONFIGURED: 'META_NOT_CONFIGURED',
+  INVALID_OAUTH_STATE: 'INVALID_OAUTH_STATE',
+  SOCIAL_ACCOUNT_NOT_FOUND: 'SOCIAL_ACCOUNT_NOT_FOUND',
+  SOCIAL_POST_NOT_FOUND: 'SOCIAL_POST_NOT_FOUND',
+  INVALID_IMAGE_URL: 'INVALID_IMAGE_URL',
 };

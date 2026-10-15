@@ -9,6 +9,7 @@
  */
 
 import type * as qr from "../qr.js";
+import type * as social from "../social.js";
 import type * as users from "../users.js";
 
 import type {
@@ -19,6 +20,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   qr: typeof qr;
+  social: typeof social;
   users: typeof users;
 }>;
 
