@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, CalendarDays, ListOrdered, Mail } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, CalendarDays, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { FloatingThemeToggle } from '@/components/ThemeToggle';
 import { PRIVACY_EFFECTIVE_DATE, PRIVACY_SECTIONS } from '@/data/privacy';
 
 export const PrivacyPolicyPage = () => (
   <div className="min-h-screen bg-slate-50">
+    <FloatingThemeToggle />
     {/* Hero */}
     <div className="relative overflow-hidden bg-slate-950 text-white">
       <div
@@ -44,32 +46,6 @@ export const PrivacyPolicyPage = () => (
     </div>
 
     <div className="mx-auto max-w-4xl space-y-6 px-6 py-10 sm:px-8">
-      {/* Contents */}
-      <Card>
-        <CardContent className="p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-slate-500">
-            <ListOrdered size={15} />
-            Contents · {PRIVACY_SECTIONS.length} sections
-          </h2>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {PRIVACY_SECTIONS.map((section, i) => (
-              <a
-                key={section.title}
-                href={`#section-${i + 1}`}
-                className="group flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100 transition-all hover:bg-indigo-50 hover:ring-indigo-200"
-              >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[11px] font-black text-white transition-colors group-hover:bg-indigo-600">
-                  {i + 1}
-                </span>
-                <span className="truncate text-xs font-bold text-slate-700 group-hover:text-indigo-900">
-                  {section.title}
-                </span>
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Sections */}
       {PRIVACY_SECTIONS.map((section, i) => (
         <section key={section.title} id={`section-${i + 1}`} className="scroll-mt-6">

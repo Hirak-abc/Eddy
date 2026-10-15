@@ -333,7 +333,7 @@ export const SettingsPage = () => {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white dark:bg-white shadow transition-transform ${
                         notifications[item.key] ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />

@@ -2,3 +2,160 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #1e293b;
+}
+
+/* ── Dark-mode contrast remapping ─────────────────────────────
+   Most pages were built with light-only utilities (bg-white,
+   bg-slate-50, text-slate-900 …) and no `dark:` variants. Remap the
+   common cases centrally so text stays readable in dark mode.
+   The `:not([class*="dark:"])` guard leaves elements with explicit
+   `dark:` handling alone so those utilities keep winning. */
+
+.dark .bg-white:not([class*='dark:']) {
+  background-color: #0f172a;
+}
+
+.dark .bg-slate-50:not([class*='dark:']) {
+  background-color: #1e293b;
+}
+
+.dark .bg-slate-100:not([class*='dark:']) {
+  background-color: #334155;
+}
+
+.dark .text-slate-900:not([class*='dark:']) {
+  color: #f1f5f9;
+}
+
+.dark .text-slate-800:not([class*='dark:']) {
+  color: #e2e8f0;
+}
+
+.dark .text-slate-700:not([class*='dark:']) {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-600:not([class*='dark:']) {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-500:not([class*='dark:']) {
+  color: #94a3b8;
+}
+
+/* Saturated accent text sitting on remapped dark surfaces. The
+   `:not([class*="bg-…"])` guards keep badges/pills with tinted
+   backgrounds (e.g. bg-amber-100) untouched so dark text on a light
+   badge stays readable. */
+.dark .text-amber-800:not([class*='dark:']):not([class*='bg-amber']):not([class*='bg-orange']):not([class*='bg-yellow']) {
+  color: #fcd34d;
+}
+
+.dark .text-amber-700:not([class*='dark:']):not([class*='bg-amber']):not([class*='bg-orange']):not([class*='bg-yellow']) {
+  color: #fbbf24;
+}
+
+.dark .text-indigo-600:not([class*='dark:']):not([class*='bg-indigo']) {
+  color: #a5b4fc;
+}
+
+.dark .text-indigo-700:not([class*='dark:']):not([class*='bg-indigo']) {
+  color: #a5b4fc;
+}
+
+.dark .text-emerald-600:not([class*='dark:']):not([class*='bg-emerald']):not([class*='bg-green']) {
+  color: #6ee7b7;
+}
+
+.dark .text-emerald-700:not([class*='dark:']):not([class*='bg-emerald']):not([class*='bg-green']) {
+  color: #6ee7b7;
+}
+
+.dark .text-emerald-800:not([class*='dark:']):not([class*='bg-emerald']):not([class*='bg-green']) {
+  color: #6ee7b7;
+}
+
+.dark .text-rose-600:not([class*='dark:']):not([class*='bg-rose']):not([class*='bg-red']):not([class*='bg-pink']) {
+  color: #fb7185;
+}
+
+.dark .text-blue-600:not([class*='dark:']):not([class*='bg-blue']) {
+  color: #60a5fa;
+}
+
+.dark .border-slate-100:not([class*='dark:']) {
+  border-color: #1e293b;
+}
+
+.dark .border-slate-200:not([class*='dark:']) {
+  border-color: #334155;
+}
+
+.dark .ring-slate-100:not([class*='dark:']) {
+  --tw-ring-color: #1e293b;
+}
+
+.dark .ring-slate-200:not([class*='dark:']) {
+  --tw-ring-color: #334155;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b;
+}
+
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155;
+}
+
+/* Hover states that flash light surfaces in dark mode. */
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1e293b;
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: #334155;
+}
+
+.dark .hover\:text-slate-900:hover {
+  color: #f1f5f9;
+}
+
+.dark .hover\:text-slate-600:hover {
+  color: #cbd5e1;
+}
+
+/* Form fields keep a dark surface with light text. */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
+}

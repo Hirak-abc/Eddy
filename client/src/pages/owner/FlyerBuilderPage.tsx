@@ -227,7 +227,7 @@ export const FlyerBuilderPage = () => {
                         isSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300'
                       }`}
                     >
-                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-white" />}
                     </span>
                   </div>
                 </div>

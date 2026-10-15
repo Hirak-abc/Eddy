@@ -57,7 +57,7 @@ const ShopImage = ({ shop }: { shop: Shop }) => {
           shop.openNow ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white'
         )}
       >
-        <span className={cn('h-1.5 w-1.5 rounded-full', shop.openNow ? 'bg-white animate-pulse' : 'bg-slate-300')} />
+        <span className={cn('h-1.5 w-1.5 rounded-full', shop.openNow ? 'bg-white animate-pulse dark:bg-white' : 'bg-slate-300')} />
         {shop.openNow ? 'Open now' : 'Closed'}
       </span>
       <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">

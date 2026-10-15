@@ -1,5 +1,6 @@
 import { SignUp } from '@clerk/clerk-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { FloatingThemeToggle } from '@/components/ThemeToggle';
 import { AUTH_BG_IMAGE, authAppearance } from './authTheme';
 
 export const SignUpPage = () => {
@@ -8,6 +9,7 @@ export const SignUpPage = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#08111f] p-6">
+      <FloatingThemeToggle />
       {/* Unsplash background image */}
       <img
         src={AUTH_BG_IMAGE}

@@ -6,7 +6,7 @@ import { Zap, ArrowRight, Star, Shield, Globe } from 'lucide-react';
 
 export const CTAFooter = () => {
   return (
-    <section id="cta" className="relative py-24 px-4 sm:px-6 lg:px-8 text-white overflow-hidden" style={{ backgroundColor: '#1D2F2A' }}>
+    <section id="cta" className="relative px-4 pt-24 sm:px-6 lg:px-8 text-white overflow-hidden" style={{ backgroundColor: '#1D2F2A' }}>
       {/* Animated Background */}
       <div className="absolute inset-0">
         <motion.div
@@ -106,64 +106,67 @@ export const CTAFooter = () => {
       </div>
 
       {/* Footer with Vertical Strips */}
-      <footer className="mt-24 pt-12 relative">
-        <div className="max-w-6xl mx-auto">
+      <footer
+        className="relative -mx-4 mt-24 pt-12 sm:-mx-6 lg:-mx-8"
+        style={{ backgroundColor: '#F8E7C9' }}
+      >
+        <div className="relative mx-auto max-w-6xl">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
-            {/* Brand - Dark Teal */}
-            <div className="px-8 py-12" style={{ backgroundColor: '#7d1422', borderRightColor: '#1D5412', borderRightWidth: '1px' }}>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1D5412' }}>
-                  <Zap className="w-5 h-5 text-white" />
+            {/* Brand */}
+            <div className="border-black/10 px-8 py-12 md:border-r">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: '#3A0CA3' }}>
+                  <Zap className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-lg" style={{ color: '#fff275' }}>Eddy</span>
+                <span className="text-lg font-bold" style={{ color: '#000000' }}>Eddy</span>
               </div>
-              <p className="text-xs" style={{ color: '#F8E7C9' }}>AI-powered marketing for local businesses.</p>
+              <p className="text-xs" style={{ color: '#000000' }}>AI-powered marketing for local businesses.</p>
             </div>
 
-            {/* Product - Forest Green */}
-            <div className="px-8 py-12" style={{ backgroundColor: '#1D5412', borderRightColor: '#153751', borderRightWidth: '1px' }}>
-              <h4 className="font-bold mb-4 text-white">Product</h4>
-              <ul className="space-y-2 text-xs text-white/80">
-                <li><a href="#" className="hover:text-white transition">Features</a></li>
-                <li><a href="#" className="hover:text-white transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition">Blog</a></li>
+            {/* Product */}
+            <div className="border-black/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Product</h4>
+              <ul className="space-y-2 text-xs text-black">
+                <li><a href="#" className="transition hover:underline">Features</a></li>
+                <li><a href="#" className="transition hover:underline">Pricing</a></li>
+                <li><a href="#" className="transition hover:underline">Blog</a></li>
               </ul>
             </div>
 
-            {/* Company - Ocean Blue */}
-            <div className="px-8 py-12" style={{ backgroundColor: '#153751', borderRightColor: '#3A0CA3', borderRightWidth: '1px' }}>
-              <h4 className="font-bold mb-4 text-white">Company</h4>
-              <ul className="space-y-2 text-xs text-white/80">
-                <li><a href="#" className="hover:text-white transition">About</a></li>
-                <li><a href="#" className="hover:text-white transition">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition">Support</a></li>
+            {/* Company */}
+            <div className="border-black/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Company</h4>
+              <ul className="space-y-2 text-xs text-black">
+                <li><a href="#" className="transition hover:underline">About</a></li>
+                <li><a href="#" className="transition hover:underline">Contact</a></li>
+                <li><a href="#" className="transition hover:underline">Support</a></li>
               </ul>
             </div>
 
-            {/* Resources - Purple */}
-            <div className="px-8 py-12" style={{ backgroundColor: '#3A0CA3', borderRightColor: '#fff275', borderRightWidth: '1px' }}>
-              <h4 className="font-bold mb-4 text-white">Resources</h4>
-              <ul className="space-y-2 text-xs text-white/80">
-                <li><a href="#" className="hover:text-white transition">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition">Status</a></li>
+            {/* Resources */}
+            <div className="border-black/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Resources</h4>
+              <ul className="space-y-2 text-xs text-black">
+                <li><a href="#" className="transition hover:underline">Documentation</a></li>
+                <li><a href="#" className="transition hover:underline">Help Center</a></li>
+                <li><a href="#" className="transition hover:underline">Status</a></li>
               </ul>
             </div>
 
-            {/* Legal - Gold */}
-            <div className="px-8 py-12" style={{ backgroundColor: '#fff275', color: '#23262F' }}>
-              <h4 className="font-bold mb-4">Legal</h4>
-              <ul className="space-y-2 text-xs opacity-80">
-                <li><Link to="/privacy" className="hover:opacity-100 transition">Privacy</Link></li>
-                <li><a href="#" className="hover:opacity-100 transition">Terms</a></li>
-                <li><a href="#" className="hover:opacity-100 transition">Cookies</a></li>
+            {/* Legal */}
+            <div className="px-8 py-12">
+              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Legal</h4>
+              <ul className="space-y-2 text-xs text-black">
+                <li><Link to="/privacy" className="transition hover:underline">Privacy</Link></li>
+                <li><Link to="/terms" className="transition hover:underline">Terms</Link></li>
+                <li><a href="#" className="transition hover:underline">Cookies</a></li>
               </ul>
             </div>
           </div>
 
           {/* Copyright */}
-          <div className="text-center py-8" style={{ backgroundColor: '#1D2F2A', borderTopColor: '#1D5412', borderTopWidth: '1px' }}>
-            <p className="text-xs" style={{ color: '#F8E7C9' }}>&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing with AI.</p>
+          <div className="border-t border-black/10 py-8 text-center">
+            <p className="text-xs text-black">&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing with AI.</p>
           </div>
         </div>
       </footer>
