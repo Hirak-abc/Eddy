@@ -54,7 +54,7 @@ export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolea
       ],
     },
     {
-      title: 'AI Marketing',
+      title: 'Marketing',
       items: [
         {
           name: 'Flyer Studio',
@@ -74,8 +74,8 @@ export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolea
           name: 'Local Trends',
           path: ROUTES.OWNER_TRENDS,
           icon: TrendingUp,
-          badge: 'Hot',
-          badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+          badge: 'Soon',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
           accentColor: 'text-rose-400',
         },
       ],
@@ -124,6 +124,8 @@ export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolea
           name: 'Analytics',
           path: ROUTES.OWNER_ANALYTICS,
           icon: BarChart3,
+          badge: 'Soon',
+          badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
           accentColor: 'text-sky-400',
         },
       ],
