@@ -1,6 +1,6 @@
 // ── App ──────────────────────────────────────────────
 export const APP_NAME = 'Eddy';
-export const APP_DESCRIPTION = 'AI-powered marketing & rewards for local businesses';
+export const APP_DESCRIPTION = 'Marketing & rewards for local businesses';
 
 // ── API ──────────────────────────────────────────────
 export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';

@@ -173,7 +173,7 @@ export const OwnerLayout = () => {
           </main>
           <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
             <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-xs text-slate-400 sm:flex-row">
-              <p>© 2026 Eddy · AI marketing for local businesses</p>
+              <p>© 2026 Eddy · Marketing for local businesses</p>
               <div className="flex items-center gap-4">
                 <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
                   Privacy Policy

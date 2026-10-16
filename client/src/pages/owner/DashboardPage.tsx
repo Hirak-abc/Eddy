@@ -102,7 +102,7 @@ export const DashboardPage = () => {
               Welcome back, {business.name}
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl">
-              AI marketing engine is active. Your customer QR standee is collecting scans, and trend flyers are scheduled for auto-publishing.
+              Marketing engine is active. Your customer QR standee is collecting scans, and trend flyers are scheduled for auto-publishing.
             </p>
           </div>
 

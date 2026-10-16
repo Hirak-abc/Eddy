@@ -316,7 +316,7 @@ export const OnboardingPage = () => {
         {currentStep === 3 && (
           <form onSubmit={handleSubmit(handleFinishOnboarding as never)} className="space-y-5">
             <div className="border-b border-slate-100 pb-3">
-              <h2 className="text-lg font-bold text-slate-900">Step 3: AI Marketing Automation</h2>
+              <h2 className="text-lg font-bold text-slate-900">Step 3: Marketing Automation</h2>
               <p className="text-xs text-slate-500">Configure how Eddy creates and schedules flyers automatically.</p>
             </div>
 

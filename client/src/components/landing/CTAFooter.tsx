@@ -120,7 +120,7 @@ export const CTAFooter = () => {
                 </div>
                 <span className="text-lg font-bold" style={{ color: '#000000' }}>Eddy</span>
               </div>
-              <p className="text-xs" style={{ color: '#000000' }}>AI-powered marketing for local businesses.</p>
+              <p className="text-xs" style={{ color: '#000000' }}>Marketing for local businesses.</p>
             </div>
 
             {/* Product */}
@@ -167,7 +167,7 @@ export const CTAFooter = () => {
 
           {/* Copyright */}
           <div className="border-t border-black/10 py-8 text-center">
-            <p className="text-xs text-black">&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing with AI.</p>
+            <p className="text-xs text-black">&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing.</p>
           </div>
         </div>
       </footer>
