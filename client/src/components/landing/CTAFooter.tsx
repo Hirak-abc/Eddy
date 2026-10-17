@@ -127,9 +127,9 @@ export const CTAFooter = () => {
             <div className="border-black/10 px-8 py-12 md:border-r">
               <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Product</h4>
               <ul className="space-y-2 text-xs text-black">
-                <li><a href="#" className="transition hover:underline">Features</a></li>
-                <li><a href="#" className="transition hover:underline">Pricing</a></li>
-                <li><a href="#" className="transition hover:underline">Blog</a></li>
+                <li><Link to={ROUTES.FEATURES} className="transition hover:underline">Features</Link></li>
+                <li><Link to={ROUTES.PRICING} className="transition hover:underline">Pricing</Link></li>
+                {/* <li><a href="#" className="transition hover:underline">Blog</a></li> */}
               </ul>
             </div>
 
@@ -137,9 +137,9 @@ export const CTAFooter = () => {
             <div className="border-black/10 px-8 py-12 md:border-r">
               <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Company</h4>
               <ul className="space-y-2 text-xs text-black">
-                <li><a href="#" className="transition hover:underline">About</a></li>
-                <li><a href="#" className="transition hover:underline">Contact</a></li>
-                <li><a href="#" className="transition hover:underline">Support</a></li>
+                <li><Link to={ROUTES.ABOUT} className="transition hover:underline">About</Link></li>
+                <li><Link to={ROUTES.CONTACT} className="transition hover:underline">Contact</Link></li>
+                <li><Link to={ROUTES.SUPPORT} className="transition hover:underline">Support</Link></li>
               </ul>
             </div>
 
@@ -147,9 +147,9 @@ export const CTAFooter = () => {
             <div className="border-black/10 px-8 py-12 md:border-r">
               <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Resources</h4>
               <ul className="space-y-2 text-xs text-black">
-                <li><a href="#" className="transition hover:underline">Documentation</a></li>
-                <li><a href="#" className="transition hover:underline">Help Center</a></li>
-                <li><a href="#" className="transition hover:underline">Status</a></li>
+                <li><Link to={ROUTES.DOCUMENTATION} className="transition hover:underline">Documentation</Link></li>
+                <li><Link to={ROUTES.HELP_CENTER} className="transition hover:underline">Help Center</Link></li>
+                {/* <li><a href="#" className="transition hover:underline">Status</a></li> */}
               </ul>
             </div>
 
@@ -160,7 +160,7 @@ export const CTAFooter = () => {
                 <li><Link to="/privacy" className="transition hover:underline">Privacy</Link></li>
                 <li><Link to="/terms" className="transition hover:underline">Terms</Link></li>
                 <li><Link to="/data-deletion" className="transition hover:underline">Data Deletion</Link></li>
-                <li><a href="#" className="transition hover:underline">Cookies</a></li>
+                <li><Link to="/cookies" className="transition hover:underline">Cookies</Link></li>
               </ul>
             </div>
           </div>
