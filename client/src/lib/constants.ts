@@ -36,6 +36,14 @@ export const ROUTES = {
   PRIVACY: '/privacy',
   TERMS: '/terms',
   DATA_DELETION: '/data-deletion',
+  DOCUMENTATION: '/documentation',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  FEATURES: '/features',
+  PRICING: '/pricing',
+  HELP_CENTER: '/help-center',
+  SUPPORT: '/support',
+  COOKIES: '/cookies',
 
   // Owner
   OWNER_DASHBOARD: '/owner/dashboard',
