@@ -140,12 +140,12 @@ export const FlyerBuilderPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">AI Marketing</span>
+            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Marketing</span>
             <span className="text-slate-300">•</span>
             <span className="text-xs font-medium text-slate-500">Flyer Builder Studio</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Create AI Marketing Campaign
+            Create Marketing Campaign
           </h1>
         </div>
 
@@ -379,7 +379,7 @@ export const FlyerBuilderPage = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  xAI Marketing Engine
+                  Marketing Engine
                 </span>
                 <span className="text-xs text-slate-400 font-medium">2 Variants Generated</span>
               </div>

@@ -43,7 +43,7 @@ export const FlyersDashboardPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">AI Marketing</span>
+            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Marketing</span>
             <span className="text-slate-300">•</span>
             <span className="text-xs font-medium text-slate-500">Campaign Management</span>
           </div>

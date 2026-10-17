@@ -58,7 +58,7 @@ export const FeaturesSection = () => {
             Everything You Need to Succeed
           </h2>
           <p className="text-lg max-w-3xl mx-auto leading-relaxed" style={{ color: '#555' }}>
-            Eddy combines AI-powered design, marketing automation, and customer engagement tools into one intelligent platform.
+            Eddy combines design, marketing automation, and customer engagement tools into one intelligent platform.
           </p>
         </motion.div>
 
