@@ -26,6 +26,8 @@ import { useNavigate } from 'react-router-dom';
 import { useOwner } from '@/context/OwnerContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { clearAuthFlowState } from '@/lib/authRedirect';
+import { businessService, notifyBusinessProfileUpdated } from '@/services/business.service';
 
 export const SettingsPage = () => {
   const { signOut } = useClerk();
@@ -35,7 +37,7 @@ export const SettingsPage = () => {
   // Profile editing
   const [businessName, setBusinessName] = useState(business?.name || '');
   const [phone, setPhone] = useState(business?.phone || '');
-  const [address, setAddress] = useState(business?.address || '');
+  const [address, setAddress] = useState(business?.address || business?.location || '');
   const [operatingHours, setOperatingHours] = useState(business?.hours || '');
   const [profileSaving, setProfileSaving] = useState(false);
 
@@ -65,29 +67,50 @@ export const SettingsPage = () => {
   };
 
   // Profile save handler
-  const handleProfileSave = () => {
+  const handleProfileSave = async () => {
     if (!businessName.trim()) {
       toast.error('Business name is required');
       return;
     }
     setProfileSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      updateBusiness({
-        name: businessName,
-        phone,
-        address,
-        hours: operatingHours,
-      });
+    const profile = await businessService.getMine();
+    if (!profile.success) {
+      toast.error(profile.error?.message ?? 'Could not load your saved shop profile.');
       setProfileSaving(false);
-      toast.success('Business profile updated successfully!');
-    }, 600);
+      return;
+    }
+
+    const details = {
+      name: businessName.trim(),
+      category: business.category,
+      address: address.trim() || business.location,
+    };
+    const savedBusiness = profile.data
+      ? await businessService.update(details)
+      : await businessService.create(details);
+    if (!savedBusiness.success || savedBusiness.data === null) {
+      toast.error(savedBusiness.error?.message ?? 'Could not save your shop profile.');
+      setProfileSaving(false);
+      return;
+    }
+
+    updateBusiness({
+      name: businessName.trim(),
+      phone,
+      address: details.address,
+      location: details.address,
+      hours: operatingHours,
+    });
+    notifyBusinessProfileUpdated();
+    setProfileSaving(false);
+    toast.success('Business profile saved and added to customer shop selection.');
   };
 
   // Sign out handler
   const handleSignOut = async () => {
     try {
       await signOut(() => {
+        clearAuthFlowState();
         navigate('/');
       });
     } catch (error) {

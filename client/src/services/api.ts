@@ -11,11 +11,12 @@ export const setAuthTokenGetter = (getter: AuthTokenGetter | null) => {
 
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  tokenOverride?: string | null,
 ): Promise<ApiResponse<T>> {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-    const token = authTokenGetter ? await authTokenGetter() : null;
+    const token = tokenOverride ?? (authTokenGetter ? await authTokenGetter() : null);
     const headers = {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -79,6 +80,8 @@ async function request<T>(
 
 export const api = {
   get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
+  getWithToken: <T>(endpoint: string, token: string, signal?: AbortSignal) =>
+    request<T>(endpoint, { method: 'GET', signal }, token),
   post: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, {
       method: 'POST',

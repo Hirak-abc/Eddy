@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { api } from '@/services/api';
 import type { BusinessImages, StoredImage } from '@/types';
+import { businessService, notifyBusinessProfileUpdated } from '@/services/business.service';
 
 const businessProfileSchema = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters'),
@@ -104,9 +105,29 @@ export const BusinessProfilePage = () => {
     },
   });
 
-  const handleSaveDetails = (data: BusinessProfileFormData) => {
+  const handleSaveDetails = async (data: BusinessProfileFormData) => {
+    const details = {
+      name: data.name,
+      category: data.category,
+      address: data.location,
+    };
+    const currentBusiness = await businessService.getMine();
+    if (!currentBusiness.success) {
+      toast.error(currentBusiness.error?.message ?? 'Could not load your saved shop profile.');
+      return;
+    }
+
+    const savedBusiness = currentBusiness.data
+      ? await businessService.update(details)
+      : await businessService.create(details);
+    if (!savedBusiness.success || savedBusiness.data === null) {
+      toast.error(savedBusiness.error?.message ?? 'Could not save your shop profile.');
+      return;
+    }
+
     updateBusiness(data);
-    toast.success('Business profile updated successfully.');
+    notifyBusinessProfileUpdated();
+    toast.success('Business profile saved and added to customer shop selection.');
   };
 
   const handleSaveImages = async () => {

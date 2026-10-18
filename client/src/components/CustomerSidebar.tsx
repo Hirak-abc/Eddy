@@ -4,18 +4,24 @@ import {
   Ticket, UserCheck, Zap, Star, Settings, ScanLine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MAX_DAILY_SCANS } from '@/lib/constants';
 
-const navItems = [
+const navItems: {
+  name: string;
+  path: string;
+  icon: React.ElementType;
+  badge?: string;
+}[] = [
   { name: 'Home', path: '/customer/home', icon: Home },
-  { name: 'Discover', path: '/customer/discover', icon: Search },
+  { name: 'Discover', path: '/customer/discover', icon: Search, badge: 'Soon' },
   { name: 'Scan QR', path: '/customer/scan', icon: QrCode },
   { name: 'Spin Wheel', path: '/customer/spin-wheel', icon: Target },
   { name: 'Wallet', path: '/customer/wallet', icon: Wallet },
   { name: 'History', path: '/customer/history', icon: History },
   { name: 'Coupons', path: '/customer/coupons', icon: Ticket },
   { name: 'Following', path: '/customer/following', icon: UserCheck },
-  { name: 'Streak', path: '/customer/streak', icon: Zap },
-  { name: 'Reviews', path: '/customer/review-rating', icon: Star },
+  { name: 'Streak', path: '/customer/streak', icon: Zap, badge: 'Soon' },
+  { name: 'Reviews', path: '/customer/review-rating', icon: Star, badge: 'Soon' },
   { name: 'Settings', path: '/customer/settings', icon: Settings },
 ];
 
@@ -51,7 +57,19 @@ export const CustomerSidebar = () => {
               )}
             >
               <Icon size={19} />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {item.badge && (
+                <span
+                  className={cn(
+                    'rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide',
+                    isActive
+                      ? 'border-white/20 bg-white/20 text-white'
+                      : 'border-amber-500/30 bg-amber-500/20 text-amber-300'
+                  )}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -61,7 +79,7 @@ export const CustomerSidebar = () => {
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center gap-2 text-sm font-bold text-amber-300">
             <ScanLine size={16} />
-            3 scans left
+            Up to {MAX_DAILY_SCANS} scans per day
           </div>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Scan shop QR codes to earn coins & unlock spins.

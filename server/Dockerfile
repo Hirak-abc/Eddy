@@ -20,8 +20,8 @@ COPY convex/_generated ./convex/_generated
 WORKDIR /app/server
 
 ENV NODE_ENV=development
-ENV PORT=5000
+ENV PORT=5001
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["npm", "run", "dev"]

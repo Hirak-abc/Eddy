@@ -5,23 +5,30 @@ import { scanQrSchema } from './qr.schema';
 export const QR_CONTROLLER = {
   scan: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const customerId = (req as any).auth?.userId || req.body.customerId || 'sample-customer-id';
+      const token = req.authToken;
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+      }
       const parsed = scanQrSchema.parse(req.body);
 
-      const result = await QR_SERVICE.scanShopQr(customerId, parsed.businessId);
+      const result = await QR_SERVICE.scanShopQr(parsed.qrToken, token);
 
       res.status(200).json({
         success: true,
         data: result,
         error: null,
       });
-    } catch (error: any) {
-      if (error.code && error.message) {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error) {
         return res.status(400).json({
           success: false,
           data: null,
           error: {
-            code: error.code,
+            code: String(error.code),
             message: error.message,
           },
         });
@@ -32,8 +39,15 @@ export const QR_CONTROLLER = {
 
   status: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const customerId = (req as any).auth?.userId || req.query.customerId || 'sample-customer-id';
-      const result = await QR_SERVICE.getScanStatus(customerId as string);
+      const token = req.authToken;
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+      }
+      const result = await QR_SERVICE.getScanStatus(token);
 
       res.status(200).json({
         success: true,
@@ -42,6 +56,22 @@ export const QR_CONTROLLER = {
       });
     } catch (error) {
       next(error);
+    }
+  },
+
+  resolve: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await QR_SERVICE.resolveQr(req.params.qrToken);
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          data: null,
+          error: { code: 'INVALID_QR', message: 'This QR code is invalid or disabled.' },
+        });
+      }
+      return res.status(200).json({ success: true, data: result, error: null });
+    } catch (error) {
+      return next(error);
     }
   },
 };

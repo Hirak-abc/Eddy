@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 import {
@@ -16,13 +16,39 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { OwnerProvider, useOwner } from '../context/OwnerContext';
 import { ROUTES } from '../lib/constants';
 import { Button } from '../components/ui/Button';
+import {
+  BUSINESS_PROFILE_UPDATED_EVENT,
+  businessService,
+  type OwnerBusiness,
+} from '../services/business.service';
 
 const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
   const { business, toggleAutoPublish, transactions } = useOwner();
   const navigate = useNavigate();
+  const [savedBusiness, setSavedBusiness] = useState<OwnerBusiness | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const pendingRequests = transactions.filter((t) => t.status === 'PENDING');
   const pendingAmount = pendingRequests.reduce((sum, t) => sum + t.amount, 0);
+
+  const loadSavedBusiness = useCallback(async () => {
+    const response = await businessService.getMine();
+    if (!response.success) {
+      setProfileError(response.error?.message ?? 'Could not load your shop profile.');
+      setProfileLoading(false);
+      return;
+    }
+    setSavedBusiness(response.data);
+    setProfileError(null);
+    setProfileLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadSavedBusiness();
+    window.addEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
+    return () => window.removeEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
+  }, [loadSavedBusiness]);
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between shadow-xs dark:border-slate-800 dark:bg-slate-900/95">
@@ -36,28 +62,62 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
           <Menu size={22} />
         </button>
 
-        <Link
-          to={ROUTES.OWNER_PROFILE}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-all group"
-          title="View & Edit Business Profile"
-        >
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
-            <Store size={15} />
-          </div>
-          <div className="flex flex-col text-left">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
-                {business.name}
-              </span>
-              <span title="Verified Business" className="inline-flex">
-                <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+        {savedBusiness ? (
+          <Link
+            to={ROUTES.OWNER_PROFILE}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-all group"
+            title="View & Edit Business Profile"
+          >
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+              <Store size={15} />
+            </div>
+            <div className="flex flex-col text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
+                  {savedBusiness.name}
+                </span>
+                {savedBusiness.verificationStatus === 'VERIFIED' && (
+                  <span title="Verified Business" className="inline-flex">
+                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium truncate max-w-[140px] sm:max-w-[180px]">
+                {savedBusiness.category}
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 font-medium truncate max-w-[140px] sm:max-w-[180px]">
-              {business.category}
-            </span>
+          </Link>
+        ) : profileLoading ? (
+          <div className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
+            <Store size={15} />
+            Loading shop profile…
           </div>
-        </Link>
+        ) : profileError ? (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setProfileLoading(true);
+              void loadSavedBusiness();
+            }}
+            title={profileError}
+            className="rounded-xl text-xs"
+          >
+            Retry profile
+          </Button>
+        ) : (
+          <Link
+            to={ROUTES.OWNER_SETTINGS}
+            className="group flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
+            title="Set up your business profile in Settings & Billing"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm transition-transform group-hover:scale-105">
+              <Store size={14} />
+            </div>
+            <span className="text-xs font-bold text-indigo-800 transition-colors group-hover:text-violet-800">
+              Set your profile
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Right: Actions, Auto-Publish status, Pending Alert & Profile */}
@@ -173,7 +233,7 @@ export const OwnerLayout = () => {
           </main>
           <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
             <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-xs text-slate-400 sm:flex-row">
-              <p>© 2026 Eddy · AI marketing for local businesses</p>
+              <p>© 2026 Eddy · Marketing for local businesses</p>
               <div className="flex items-center gap-4">
                 <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
                   Privacy Policy

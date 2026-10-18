@@ -97,6 +97,69 @@ const cancelPost = makeFunctionReference<
 const memoryAccounts = new Map<string, SocialAccountRecord>();
 const memoryPosts = new Map<string, SocialPostRecord>();
 
+const listAccountsByClerkId = makeFunctionReference<
+  'query',
+  { clerkUserId: string },
+  SocialAccountRecord[]
+>('social:listAccountsByClerkId');
+const getAccountById = makeFunctionReference<
+  'query',
+  { id: GenericId<'socialAccounts'> },
+  SocialAccountRecord | null
+>('social:getAccountById');
+const getAccountsByIds = makeFunctionReference<
+  'query',
+  { ids: string[] },
+  SocialAccountRecord[]
+>('social:getAccountsByIds');
+const upsertAccount = makeFunctionReference<
+  'mutation',
+  Omit<SocialAccountRecord, 'id' | 'createdAt' | 'updatedAt'>,
+  GenericId<'socialAccounts'>
+>('social:upsertAccount');
+const updateAccount = makeFunctionReference<
+  'mutation',
+  {
+    id: GenericId<'socialAccounts'>;
+    clerkUserId: string;
+    autoPublish?: boolean;
+    status?: SocialAccountRecord['status'];
+    encryptedAccessToken?: string;
+  },
+  GenericId<'socialAccounts'>
+>('social:updateAccount');
+const createPost = makeFunctionReference<
+  'mutation',
+  Omit<SocialPostRecord, 'id' | 'createdAt' | 'updatedAt' | 'externalResults'>,
+  GenericId<'socialPosts'>
+>('social:createPost');
+const getPostById = makeFunctionReference<
+  'query',
+  { id: GenericId<'socialPosts'> },
+  SocialPostRecord | null
+>('social:getPostById');
+const claimDuePosts = makeFunctionReference<
+  'mutation',
+  { nowIso: string; limit?: number },
+  SocialPostRecord[]
+>('social:claimDuePosts');
+const markPostResult = makeFunctionReference<
+  'mutation',
+  {
+    id: GenericId<'socialPosts'>;
+    status: SocialPostStatus;
+    externalResults?: SocialPostResult[];
+    errorCode?: string;
+    errorMessage?: string;
+  },
+  GenericId<'socialPosts'>
+>('social:markPostResult');
+const cancelPost = makeFunctionReference<
+  'mutation',
+  { id: GenericId<'socialPosts'>; clerkUserId: string },
+  GenericId<'socialPosts'>
+>('social:cancelPost');
+
 const toPublicSafe = (account: SocialAccountRecord): SocialAccountRecord => account;
 
 export const SOCIAL_REPOSITORY = {

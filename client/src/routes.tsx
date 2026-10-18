@@ -8,6 +8,14 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { DataDeletionPage } from './pages/DataDeletionPage';
+import { DocumentationPage } from './pages/DocumentationPage';
+import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
+import { FeaturesPage } from './pages/FeaturesPage';
+import { PricingPage } from './pages/PricingPage';
+import { HelpCenterPage } from './pages/HelpCenterPage';
+import { SupportPage } from './pages/SupportPage';
+import { CookiePolicyPage } from './pages/CookiePolicyPage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 // Owner pages
@@ -258,6 +266,46 @@ export const router = createBrowserRouter([
   {
     path: '/data_deletion',
     element: <DataDeletionPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/documentation',
+    element: <DocumentationPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/about',
+    element: <AboutPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/contact',
+    element: <ContactPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/features',
+    element: <FeaturesPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/pricing',
+    element: <PricingPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/help-center',
+    element: <HelpCenterPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/support',
+    element: <SupportPage />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: '/cookies',
+    element: <CookiePolicyPage />,
     errorElement: <NotFoundPage />,
   },
 

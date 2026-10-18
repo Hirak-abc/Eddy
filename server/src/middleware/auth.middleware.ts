@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
 import type { UserRole } from '../types';
@@ -34,6 +35,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     });
   }
 
+  let userId: string;
   try {
     const claims = await verifyToken(token, { secretKey: config.CLERK_SECRET_KEY });
     let userRole = roleFromClaims(claims as unknown as Record<string, unknown>);
@@ -50,6 +52,32 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       success: false,
       data: null,
       error: { code: ERROR_CODES.UNAUTHORIZED, message: 'Invalid authentication token' },
+    });
+  }
+
+  try {
+    const profile = await createAuthenticatedConvexClient(token).query(getUserByClerkId, {
+      clerkId: userId,
+    });
+    const isInactive =
+      profile?.status === 'SUSPENDED' ||
+      profile?.status === 'DELETED' ||
+      profile?.status === 'INACTIVE';
+    req.user = {
+      id: userId,
+      role: isInactive ? undefined : profile?.role,
+    };
+    req.authToken = token;
+    next();
+  } catch (error) {
+    logAuthenticationFailure(req, res, 'convex_role_lookup', error);
+    return res.status(503).json({
+      success: false,
+      data: null,
+      error: {
+        code: ERROR_CODES.EXTERNAL_API_ERROR,
+        message: 'Authentication services are temporarily unavailable.',
+      },
     });
   }
 };

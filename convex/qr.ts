@@ -1,50 +1,71 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
+import { requireUser } from './auth';
+
+const MAX_DAILY_SCANS_PER_CUSTOMER = 100;
 
 export const recordScan = mutation({
   args: {
-    customerId: v.string(),
-    businessId: v.string(),
-    scannedAt: v.string(),
-    dateString: v.string(),
+    qrToken: v.string(),
   },
   handler: async (ctx, args) => {
-    // Check scans today for customer
-    const existingScans = await ctx.db
-      .query("qrScans")
-      .withIndex("by_customer_date", (q) =>
-        q.eq("customerId", args.customerId).eq("dateString", args.dateString)
+    const customer = await requireUser(ctx, ['CUSTOMER']);
+    const scannedAt = new Date().toISOString();
+    const dateString = scannedAt.slice(0, 10);
+    const business = await ctx.db
+      .query('businesses')
+      .withIndex('by_qr_token', (q) => q.eq('qrToken', args.qrToken))
+      .unique();
+
+    if (!business || !business.qrEnabled) {
+      throw new Error('INVALID_QR');
+    }
+
+    const scansToday = await ctx.db
+      .query('qrScans')
+      .withIndex('by_customer_date', (q) =>
+        q.eq('customerId', customer.id).eq('dateString', dateString)
       )
       .collect();
 
-    if (existingScans.length >= 100) {
-      throw new Error("DAILY_SCAN_LIMIT_REACHED: Maximum 100 scans per customer per day.");
+    if (scansToday.length >= MAX_DAILY_SCANS_PER_CUSTOMER) {
+      throw new Error('DAILY_SCAN_LIMIT_REACHED');
     }
 
-    const scanId = await ctx.db.insert("qrScans", {
-      customerId: args.customerId,
-      businessId: args.businessId,
-      scannedAt: args.scannedAt,
-      dateString: args.dateString,
+    const scanId = await ctx.db.insert('qrScans', {
+      customerId: customer.id,
+      businessId: business._id,
+      scannedAt,
+      dateString,
     });
 
-    return { scanId, scansCountToday: existingScans.length + 1 };
+    return {
+      scanId,
+      businessId: business._id,
+      businessName: business.name,
+      category: business.category,
+      address: business.address,
+      scansToday: scansToday.length + 1,
+      scansLeft: MAX_DAILY_SCANS_PER_CUSTOMER - scansToday.length - 1,
+    };
   },
 });
 
 export const getScansCountToday = query({
-  args: {
-    customerId: v.string(),
-    dateString: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const existingScans = await ctx.db
-      .query("qrScans")
-      .withIndex("by_customer_date", (q) =>
-        q.eq("customerId", args.customerId).eq("dateString", args.dateString)
+  args: {},
+  handler: async (ctx) => {
+    const customer = await requireUser(ctx, ['CUSTOMER']);
+    const dateString = new Date().toISOString().slice(0, 10);
+    const scansToday = await ctx.db
+      .query('qrScans')
+      .withIndex('by_customer_date', (q) =>
+        q.eq('customerId', customer.id).eq('dateString', dateString)
       )
       .collect();
 
-    return existingScans.length;
+    return {
+      scansToday: scansToday.length,
+      scansLeft: Math.max(0, MAX_DAILY_SCANS_PER_CUSTOMER - scansToday.length),
+    };
   },
 });

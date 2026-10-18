@@ -1,43 +1,44 @@
 import { QR_REPOSITORY } from './qr.repository';
 import type { QrScanResult, QrStatusResult } from './qr.types';
+import { QR_RULES } from '../../config/constants';
 
 export const QR_SERVICE = {
-  scanShopQr: async (customerId: string, businessId: string): Promise<QrScanResult> => {
-    const now = new Date();
-    const scannedAt = now.toISOString();
-    const dateString = now.toISOString().split('T')[0]; // YYYY-MM-DD
-
+  scanShopQr: async (qrToken: string, token: string): Promise<QrScanResult> => {
     try {
-      const record = await QR_REPOSITORY.recordScan(customerId, businessId, scannedAt, dateString);
-      const scansToday = record.scansCountToday;
-      const scansLeft = Math.max(0, 100 - scansToday);
+      const record = await QR_REPOSITORY.recordScan(qrToken, token);
 
       return {
         scanId: record.scanId,
-        businessId,
-        scansToday,
-        scansLeft,
-        coinsAwarded: 10,
-        message: 'Scan verified successfully — +10 Eddy Coins earned!',
+        businessId: record.businessId,
+        businessName: record.businessName,
+        category: record.category,
+        address: record.address,
+        scansToday: record.scansToday,
+        scansLeft: record.scansLeft,
+        message: `Verified ${record.businessName}. Spin now to reveal your reward.`,
       };
-    } catch (error: any) {
-      if (error.message && error.message.includes('DAILY_SCAN_LIMIT_REACHED')) {
-        throw {
-          code: 'DAILY_SCAN_LIMIT_REACHED',
-          message: 'Daily scan limit reached — you can only scan up to 100 times per day.',
-        };
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('DAILY_SCAN_LIMIT_REACHED')) {
+        throw Object.assign(
+          new Error(
+            `Daily scan limit reached — you can only scan up to ${QR_RULES.MAX_DAILY_SCANS_PER_CUSTOMER} times per day.`
+          ),
+          {
+            code: 'DAILY_SCAN_LIMIT_REACHED',
+          }
+        );
+      }
+      if (error instanceof Error && error.message.includes('INVALID_QR')) {
+        throw Object.assign(new Error('This QR code is invalid, disabled, or no longer active.'), {
+          code: 'INVALID_QR',
+        });
       }
       throw error;
     }
   },
 
-  getScanStatus: async (customerId: string): Promise<QrStatusResult> => {
-    const dateString = new Date().toISOString().split('T')[0];
-    const scansToday = await QR_REPOSITORY.getScansCountToday(customerId, dateString);
-    const scansLeft = Math.max(0, 100 - scansToday);
-    return {
-      scansToday,
-      scansLeft,
-    };
-  },
+  getScanStatus: async (token: string): Promise<QrStatusResult> =>
+    await QR_REPOSITORY.getScansCountToday(token),
+
+  resolveQr: (qrToken: string) => QR_REPOSITORY.resolveQr(qrToken),
 };

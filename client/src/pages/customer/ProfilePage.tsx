@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useClerk } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { useProfilePhoto } from '@/hooks/useProfilePhoto';
+import { clearAuthFlowState } from '@/lib/authRedirect';
 
 const STATS = [
   { label: 'Day streak', value: '5', color: 'bg-orange-100 text-orange-600' },
@@ -23,6 +24,7 @@ export const ProfilePage = () => {
   const handleSignOut = async () => {
     try {
       await signOut(() => {
+        clearAuthFlowState();
         navigate('/');
       });
     } catch (error) {

@@ -13,8 +13,16 @@ import type * as coupons from "../coupons.js";
 import type * as flyers from "../flyers.js";
 import type * as qr from "../qr.js";
 import type * as serverAuth from "../serverAuth.js";
+import type * as auth from "../auth.js";
+import type * as businesses from "../businesses.js";
+import type * as qr from "../qr.js";
+import type * as redemptions from "../redemptions.js";
+import type * as rewardPool from "../rewardPool.js";
+import type * as rewards from "../rewards.js";
+import type * as settlements from "../settlements.js";
 import type * as social from "../social.js";
 import type * as users from "../users.js";
+import type * as wallets from "../wallets.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   serverAuth: typeof serverAuth;
   social: typeof social;
   users: typeof users;
+  wallets: typeof wallets;
 }>;
 
 /**

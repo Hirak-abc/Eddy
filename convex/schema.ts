@@ -29,12 +29,88 @@ export default defineSchema({
     updatedAt: v.union(v.string(), v.number()),
   }).index("by_clerk_id", ["clerkId"]),
 
+  businesses: defineTable({
+    ownerId: v.string(),
+    name: v.string(),
+    category: v.string(),
+    address: v.string(),
+    qrToken: v.string(),
+    qrEnabled: v.boolean(),
+    // Retained to read existing records; QR access is controlled only by qrEnabled.
+    verificationStatus: v.union(
+      v.literal("PENDING"),
+      v.literal("VERIFIED"),
+      v.literal("REJECTED"),
+    ),
+    rewardCycleNumber: v.number(),
+    rewardSlots: v.array(v.number()),
+    rewardSlotIndex: v.number(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_qr_token", ["qrToken"]),
+
+  redeemableOffers: defineTable({
+    businessId: v.string(),
+    ownerId: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    coinsCost: v.number(),
+    settlementValuePaise: v.number(),
+    active: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  }).index("by_business", ["businessId"]),
+
   qrScans: defineTable({
     customerId: v.string(),
     businessId: v.string(),
     scannedAt: v.string(),
     dateString: v.string(), // YYYY-MM-DD for daily limit counting
-  }).index("by_customer_date", ["customerId", "dateString"]),
+  })
+    .index("by_customer_date", ["customerId", "dateString"])
+    .index("by_business", ["businessId"]),
+
+  wallets: defineTable({
+    customerId: v.string(),
+    balance: v.number(),
+    reservedBalance: v.optional(v.number()),
+    spentBalance: v.optional(v.number()),
+    updatedAt: v.string(),
+  }).index("by_customer", ["customerId"]),
+
+  ownerWallets: defineTable({
+    ownerId: v.string(),
+    balancePaise: v.number(),
+    lifetimeCreditsPaise: v.number(),
+    updatedAt: v.string(),
+  }).index("by_owner", ["ownerId"]),
+
+  ownerWalletTransactions: defineTable({
+    ownerId: v.string(),
+    redemptionId: v.string(),
+    reference: v.string(),
+    amountPaise: v.number(),
+    type: v.string(),
+    createdAt: v.string(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_redemption", ["redemptionId"]),
+
+  walletTransactions: defineTable({
+    customerId: v.string(),
+    businessId: v.string(),
+    type: v.string(),
+    amount: v.number(),
+    scanId: v.optional(v.string()),
+    redemptionId: v.optional(v.string()),
+    idempotencyKey: v.optional(v.string()),
+    createdAt: v.string(),
+  })
+    .index("by_customer", ["customerId"])
+    .index("by_scan", ["scanId"])
+    .index("by_redemption", ["redemptionId"]),
 
   socialAccounts: defineTable({
     clerkUserId: v.string(),
@@ -164,4 +240,127 @@ export default defineSchema({
   })
     .index("by_owner", ["ownerClerkId"])
     .index("by_customer", ["customerClerkId"]),
+  spins: defineTable({
+    customerId: v.string(),
+    businessId: v.string(),
+    scanId: v.optional(v.string()),
+    idempotencyKey: v.optional(v.string()),
+    rewardType: v.string(),
+    rewardValue: v.string(),
+    coinsAwarded: v.number(),
+    coinsCredited: v.optional(v.number()),
+    coinsOverflow: v.optional(v.number()),
+    cycleNumber: v.optional(v.number()),
+    slotIndex: v.optional(v.number()),
+    timestamp: v.string(),
+  })
+    .index("by_customer", ["customerId"])
+    .index("by_scan", ["scanId"])
+    .index("by_idempotency", ["customerId", "idempotencyKey"]),
+
+  redemptions: defineTable({
+    reference: v.string(),
+    customerId: v.string(),
+    idempotencyKey: v.string(),
+    businessId: v.string(),
+    ownerId: v.string(),
+    offerId: v.optional(v.string()),
+    offerName: v.string(),
+    coinsCost: v.number(),
+    settlementValuePaise: v.number(),
+    status: v.union(
+      v.literal("REQUESTED"),
+      v.literal("APPROVED"),
+      v.literal("REJECTED"),
+      v.literal("EXPIRED"),
+      v.literal("CANCELLED"),
+      v.literal("REFUNDED"),
+      v.literal("DISPUTED"),
+    ),
+    requestedAt: v.string(),
+    reviewedAt: v.optional(v.string()),
+    expiresAt: v.string(),
+  })
+    .index("by_customer", ["customerId"])
+    .index("by_customer_idempotency", ["customerId", "idempotencyKey"])
+    .index("by_owner", ["ownerId"])
+    .index("by_business", ["businessId"])
+    .index("by_offer", ["offerId"])
+    .index("by_status_expiry", ["status", "expiresAt"]),
+
+  ownerReceivables: defineTable({
+    redemptionId: v.string(),
+    reference: v.string(),
+    ownerId: v.string(),
+    businessId: v.string(),
+    customerId: v.string(),
+    amountPaise: v.number(),
+    eligibleAt: v.string(),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("ELIGIBLE"),
+      v.literal("PROCESSING"),
+      v.literal("PAID"),
+      v.literal("FAILED"),
+      v.literal("REVERSED"),
+    ),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    paidAt: v.optional(v.string()),
+    paymentReference: v.optional(v.string()),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_redemption", ["redemptionId"])
+    .index("by_status_eligible", ["status", "eligibleAt"]),
+
+  settlementBatches: defineTable({
+    reference: v.string(),
+    ownerId: v.string(),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("PROCESSING"),
+      v.literal("PAID"),
+      v.literal("FAILED"),
+      v.literal("REVERSED"),
+    ),
+    totalPaise: v.number(),
+    redemptionIds: v.array(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+    paidAt: v.optional(v.string()),
+    paymentReference: v.optional(v.string()),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_reference", ["reference"]),
+
+  settlementLedger: defineTable({
+    batchId: v.string(),
+    ownerId: v.string(),
+    redemptionId: v.string(),
+    amountPaise: v.number(),
+    event: v.union(
+      v.literal("ALLOCATED"),
+      v.literal("PAID"),
+      v.literal("FAILED"),
+      v.literal("REVERSED"),
+    ),
+    createdAt: v.string(),
+  })
+    .index("by_redemption", ["redemptionId"])
+    .index("by_batch", ["batchId"]),
+
+  settlementAudit: defineTable({
+    batchId: v.string(),
+    actorId: v.string(),
+    event: v.string(),
+    note: v.optional(v.string()),
+    createdAt: v.string(),
+  }).index("by_batch", ["batchId"]),
+
+  streaks: defineTable({
+    customerId: v.string(),
+    currentStreak: v.number(),
+    bonusCoinsEarned: v.number(),
+    lastActiveDate: v.union(v.string(), v.null()),
+  }).index("by_customer", ["customerId"]),
 });

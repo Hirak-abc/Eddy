@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/context/ThemeContext';
+import { clearAuthFlowState } from '@/lib/authRedirect';
 
 export const SettingsPage = () => {
   const { signOut } = useClerk();
@@ -17,6 +18,7 @@ export const SettingsPage = () => {
   const handleSignOut = async () => {
     try {
       await signOut(() => {
+        clearAuthFlowState();
         navigate('/');
       });
     } catch (error) {

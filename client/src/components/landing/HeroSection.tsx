@@ -60,7 +60,7 @@ export const HeroSection = () => {
             style={{ backgroundColor: 'rgba(58, 12, 163, 0.3)', borderColor: '#3A0CA3' }}
           >
             <Sparkles className="w-4 h-4" style={{ color: '#fff275' }} />
-            <span className="text-sm font-medium" style={{ color: '#fff275' }}>AI-Powered Marketing Platform</span>
+            <span className="text-sm font-medium" style={{ color: '#fff275' }}>Marketing Platform</span>
           </motion.div>
 
           {/* Headline */}
@@ -83,7 +83,7 @@ export const HeroSection = () => {
             className="text-lg leading-relaxed max-w-xl"
             style={{ color: '#F8E7C9' }}
           >
-            Create stunning AI-powered flyers, publish across social media, and build customer loyalty—all from one intelligent platform built for small businesses.
+            Create stunning flyers, publish across social media, and build customer loyalty—all from one intelligent platform built for small businesses.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -159,7 +159,7 @@ export const HeroSection = () => {
           />
           <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to top, #23262F, transparent 60%)' }} />
           <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#3A0CA3', color: '#fff275' }}>
-            ✨ AI Powered
+            ✨ Eddy Studio
           </div>
         </motion.div>
       </div>

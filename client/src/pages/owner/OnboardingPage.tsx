@@ -17,6 +17,7 @@ import { useOwner } from '@/context/OwnerContext';
 import { ROUTES } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { businessService, notifyBusinessProfileUpdated } from '@/services/business.service';
 
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters'),
@@ -45,7 +46,7 @@ export const OnboardingPage = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema) as never,
     defaultValues: {
@@ -59,16 +60,37 @@ export const OnboardingPage = () => {
     },
   });
 
-  const handleFinishOnboarding = (data: OnboardingFormData) => {
+  const handleFinishOnboarding = async (data: OnboardingFormData) => {
+    const profile = await businessService.getMine();
+    if (!profile.success) {
+      toast.error(profile.error?.message ?? 'Could not load your saved shop profile.');
+      return;
+    }
+
+    const details = {
+      name: data.name.trim(),
+      category: data.category.trim(),
+      address: data.location.trim(),
+    };
+    const savedBusiness = profile.data
+      ? await businessService.update(details)
+      : await businessService.create(details);
+    if (!savedBusiness.success || savedBusiness.data === null) {
+      toast.error(savedBusiness.error?.message ?? 'Could not save your shop profile.');
+      return;
+    }
+
     updateBusiness({
-      name: data.name,
-      category: data.category,
-      location: data.location,
+      name: details.name,
+      category: details.category,
+      location: details.address,
+      address: details.address,
       phone: data.phone,
       email: data.email,
       autoPublish: data.autoPublish ?? true,
       verificationStatus: 'VERIFIED',
     });
+    notifyBusinessProfileUpdated();
 
     updateBusinessImages({
       shop: {
@@ -88,7 +110,7 @@ export const OnboardingPage = () => {
       },
     });
 
-    toast.success('Onboarding complete! Your AI Flyer Studio and QR standees are ready.');
+    toast.success('Onboarding complete! Your shop is saved and available for customer redemptions.');
     navigate(ROUTES.OWNER_DASHBOARD);
   };
 
@@ -316,7 +338,7 @@ export const OnboardingPage = () => {
         {currentStep === 3 && (
           <form onSubmit={handleSubmit(handleFinishOnboarding as never)} className="space-y-5">
             <div className="border-b border-slate-100 pb-3">
-              <h2 className="text-lg font-bold text-slate-900">Step 3: AI Marketing Automation</h2>
+              <h2 className="text-lg font-bold text-slate-900">Step 3: Marketing Automation</h2>
               <p className="text-xs text-slate-500">Configure how Eddy creates and schedules flyers automatically.</p>
             </div>
 
@@ -391,10 +413,11 @@ export const OnboardingPage = () => {
               </Button>
               <Button
                 type="submit"
+                disabled={isSubmitting}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-7 py-2.5 text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20"
               >
                 <Check size={16} />
-                <span>Complete Setup & Launch</span>
+                <span>{isSubmitting ? 'Saving shop…' : 'Complete Setup & Launch'}</span>
               </Button>
             </div>
           </form>
