@@ -15,6 +15,8 @@ interface ComingSoonProps {
   features?: string[];
   backTo?: string;
   backLabel?: string;
+  secondaryTo?: string;
+  secondaryLabel?: string;
 }
 
 const FLOATERS = [
@@ -38,6 +40,8 @@ export const ComingSoon = ({
   features = [],
   backTo = '/owner/dashboard',
   backLabel = 'Back to Dashboard',
+  secondaryTo = '/owner/flyers',
+  secondaryLabel = 'Explore Flyer Studio',
 }: ComingSoonProps) => {
   return (
     <div className="relative min-h-[78vh] overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-950 px-6 py-16 text-center shadow-sm sm:px-12">
@@ -218,11 +222,11 @@ export const ComingSoon = ({
             {backLabel}
           </Link>
           <Link
-            to="/owner/flyers"
+            to={secondaryTo}
             className={`inline-flex items-center gap-2 rounded-xl bg-gradient-to-r ${accentFrom} ${accentTo} px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:opacity-90`}
           >
             <Sparkles size={14} />
-            Explore Flyer Studio
+            {secondaryLabel}
           </Link>
         </motion.div>
       </div>
