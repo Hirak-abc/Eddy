@@ -85,6 +85,37 @@ export const getOwnedBusiness = query({
   },
 });
 
+export const updateOwnedBusiness = mutation({
+  args: {
+    name: v.string(),
+    category: v.string(),
+    address: v.string(),
+    timestamp: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const owner = await requireUser(ctx, ['OWNER', 'ADMIN']);
+    const business = await ctx.db
+      .query('businesses')
+      .withIndex('by_owner', (q) => q.eq('ownerId', owner.id))
+      .unique();
+    if (!business) {
+      throw new Error('BUSINESS_NOT_FOUND');
+    }
+
+    await ctx.db.patch(business._id, {
+      name: args.name,
+      category: args.category,
+      address: args.address,
+      updatedAt: args.timestamp,
+    });
+    const updatedBusiness = await ctx.db.get(business._id);
+    if (!updatedBusiness) {
+      throw new Error('BUSINESS_UPDATE_FAILED');
+    }
+    return updatedBusiness;
+  },
+});
+
 export const disableOwnedQr = mutation({
   args: { timestamp: v.string() },
   handler: async (ctx, args) => {

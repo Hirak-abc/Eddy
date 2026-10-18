@@ -5,7 +5,11 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { businessService, type OwnerBusiness } from '@/services/business.service';
+import {
+  businessService,
+  notifyBusinessProfileUpdated,
+  type OwnerBusiness,
+} from '@/services/business.service';
 import { redemptionService, type Redemption } from '@/services/redemption.service';
 import { settlementService, type OwnerSettlementSummary } from '@/services/settlement.service';
 
@@ -105,6 +109,7 @@ export const QRPage = () => {
       toast.error(response.error?.message ?? 'Could not save shop details.');
     } else {
       setBusiness(response.data);
+      notifyBusinessProfileUpdated();
       toast.success('Shop profile and permanent QR saved.');
       await loadData();
     }
@@ -112,11 +117,16 @@ export const QRPage = () => {
   };
 
   const handleReview = async (redemptionId: string, decision: 'APPROVED' | 'REJECTED') => {
+    const redemption = redemptions.find((item) => item._id === redemptionId);
     const response = await redemptionService.review(redemptionId, decision);
     if (!response.success) {
       toast.error(response.error?.message ?? 'Could not update redemption.');
+    } else if (response.data?.status !== decision) {
+      toast.error(`This request is ${response.data?.status?.toLowerCase() ?? 'no longer pending'}; no wallet credit was made.`);
     } else {
-      toast.success(`Redemption ${decision.toLowerCase()}.`);
+      toast.success(decision === 'APPROVED'
+        ? `Approved. ₹${formatRupees(redemption?.settlementValuePaise ?? 0)} added to your Eddy wallet.`
+        : 'Redemption rejected; customer Coins have been released.');
       await loadData();
     }
   };
@@ -258,15 +268,15 @@ export const QRPage = () => {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-900">Redemption requests</h2>
-                  <p className="text-sm text-slate-500">Coins are reserved at request time and finalized only after your decision.</p>
+                  <p className="text-sm text-slate-500">Approving spends the reserved customer Coins and credits the same rupee value to your Eddy wallet.</p>
                 </div>
               </div>
               <div className="divide-y divide-slate-100">
                 {redemptions.map((redemption) => (
                   <div key={redemption._id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
-                      <p className="font-bold text-slate-800">{redemption.offerName} · {redemption.coinsCost} Coins</p>
-                      <p className="text-xs text-slate-500">{redemption.reference} · ₹{formatRupees(redemption.settlementValuePaise)} receivable · {redemption.status}</p>
+                      <p className="font-bold text-slate-800">{redemption.coinsCost} Coins · ₹{formatRupees(redemption.settlementValuePaise)}</p>
+                      <p className="text-xs text-slate-500">{redemption.reference} · {redemption.status}</p>
                     </div>
                     {redemption.status === 'REQUESTED' && (
                       <div className="flex gap-2">
@@ -304,7 +314,7 @@ export const QRPage = () => {
                   </div>
                   <p className="text-sm text-slate-600">
                     Next eligibility: {settlements.nextSettlementAt ? new Date(settlements.nextSettlementAt).toLocaleString('en-IN') : 'No future settlements scheduled'}.
-                    Approved redemptions become eligible 14 days after approval.
+                    This settlement view is for legacy receivables. New coin redemptions are credited to your Eddy wallet as soon as you approve them.
                   </p>
                   <Button onClick={() => void handleSettlementBatch()} disabled={settlements.eligiblePaise <= 0}>
                     Request eligible settlement batch

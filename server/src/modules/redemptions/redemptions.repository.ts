@@ -8,7 +8,6 @@ export interface RedemptionRecord {
   customerId: string;
   businessId: string;
   ownerId: string;
-  offerId: string;
   offerName: string;
   coinsCost: number;
   settlementValuePaise: number;
@@ -20,7 +19,7 @@ export interface RedemptionRecord {
 
 const requestRedemption = makeFunctionReference<
   'mutation',
-  { offerId: GenericId<'redeemableOffers'>; idempotencyKey: string },
+  { businessId: GenericId<'businesses'>; coinsCost: number; idempotencyKey: string },
   { redemptionId: GenericId<'redemptions'>; reference: string; status: 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CANCELLED' | 'REFUNDED' | 'DISPUTED' }
 >('redemptions:requestRedemption');
 const reviewRedemption = makeFunctionReference<
@@ -50,9 +49,10 @@ const listOwnerRedemptions = makeFunctionReference<
 >('redemptions:listOwnerRedemptions');
 
 export const REDEMPTIONS_REPOSITORY = {
-  request: (offerId: string, idempotencyKey: string, token: string) =>
+  request: (businessId: string, coinsCost: number, idempotencyKey: string, token: string) =>
     createAuthenticatedConvexClient(token).mutation(requestRedemption, {
-      offerId: offerId as GenericId<'redeemableOffers'>,
+      businessId: businessId as GenericId<'businesses'>,
+      coinsCost,
       idempotencyKey,
     }),
   review: (redemptionId: string, decision: 'APPROVED' | 'REJECTED', token: string) =>

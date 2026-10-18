@@ -80,6 +80,24 @@ export default defineSchema({
     updatedAt: v.string(),
   }).index("by_customer", ["customerId"]),
 
+  ownerWallets: defineTable({
+    ownerId: v.string(),
+    balancePaise: v.number(),
+    lifetimeCreditsPaise: v.number(),
+    updatedAt: v.string(),
+  }).index("by_owner", ["ownerId"]),
+
+  ownerWalletTransactions: defineTable({
+    ownerId: v.string(),
+    redemptionId: v.string(),
+    reference: v.string(),
+    amountPaise: v.number(),
+    type: v.string(),
+    createdAt: v.string(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_redemption", ["redemptionId"]),
+
   walletTransactions: defineTable({
     customerId: v.string(),
     businessId: v.string(),
@@ -169,7 +187,7 @@ export default defineSchema({
     idempotencyKey: v.string(),
     businessId: v.string(),
     ownerId: v.string(),
-    offerId: v.string(),
+    offerId: v.optional(v.string()),
     offerName: v.string(),
     coinsCost: v.number(),
     settlementValuePaise: v.number(),
@@ -189,6 +207,7 @@ export default defineSchema({
     .index("by_customer", ["customerId"])
     .index("by_customer_idempotency", ["customerId", "idempotencyKey"])
     .index("by_owner", ["ownerId"])
+    .index("by_business", ["businessId"])
     .index("by_offer", ["offerId"])
     .index("by_status_expiry", ["status", "expiresAt"]),
 

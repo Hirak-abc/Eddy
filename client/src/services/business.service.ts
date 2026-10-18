@@ -33,10 +33,18 @@ export interface ShopSummary {
   address: string;
 }
 
+export const BUSINESS_PROFILE_UPDATED_EVENT = 'eddy-business-profile-updated';
+
+export const notifyBusinessProfileUpdated = () => {
+  window.dispatchEvent(new Event(BUSINESS_PROFILE_UPDATED_EVENT));
+};
+
 export const businessService = {
   getMine: () => api.get<OwnerBusiness | null>('/businesses/me'),
   create: (input: { name: string; category: string; address: string }) =>
     api.post<OwnerBusiness>('/businesses/me', input),
+  update: (input: { name: string; category: string; address: string }) =>
+    api.patch<OwnerBusiness>('/businesses/me', input),
   activateLegacyQr: () => api.post<OwnerBusiness>('/businesses/me/qr/activate-legacy'),
   disableQr: () => api.post<{ businessId: string; qrEnabled: false }>('/businesses/me/qr/disable'),
   getMyOffers: () => api.get<RedeemableOffer[]>('/businesses/me/offers'),

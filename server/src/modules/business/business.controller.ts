@@ -37,6 +37,16 @@ export const BUSINESS_CONTROLLER = {
     }
   },
 
+  updateOwnedBusiness: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = createBusinessSchema.parse(req.body);
+      const business = await BUSINESS_SERVICE.updateOwnedBusiness(input, req.authToken!);
+      return res.status(200).json({ success: true, data: business, error: null });
+    } catch (error) {
+      return respondError(error, res, next);
+    }
+  },
+
   disableOwnedQr: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await BUSINESS_SERVICE.disableOwnedQr(req.authToken!);
