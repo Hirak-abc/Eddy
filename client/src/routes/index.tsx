@@ -90,7 +90,7 @@ export const router = createBrowserRouter([
       { path: 'discover', element: <ShopDiscoveryPage /> },
       { path: 'shop', element: <ShopEnvironmentPage /> },
       { path: 'scan', element: <ScanPage /> },
-      { path: 'spin', element: <SpinWheelPage /> },
+      { path: 'spin-wheel', element: <SpinWheelPage /> },
       { path: 'rewards', element: <CustomerRewardsPage /> },
       { path: 'wallet', element: <CustomerWalletPage /> },
       { path: 'coupons', element: <CouponCodesPage /> },

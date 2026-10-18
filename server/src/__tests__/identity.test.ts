@@ -57,6 +57,10 @@ vi.mock('../integrations/convex/client', () => ({
     query: mockConvexQuery,
     mutation: mockConvexMutation,
   },
+  createAuthenticatedConvexClient: () => ({
+    query: mockConvexQuery,
+    mutation: mockConvexMutation,
+  }),
 }));
 
 vi.mock('../integrations/clerk/client', () => ({
@@ -84,21 +88,26 @@ describe('IDENTITY_REPOSITORY.setRole Convex Synchronization', () => {
   it('sync creates Convex user for new customer', async () => {
     mockConvexQuery.mockResolvedValueOnce(null);
     mockConvexMutation.mockResolvedValueOnce('doc_1');
-    const r = await IDENTITY_REPOSITORY.setRole('user_test123', 'CUSTOMER');
+    const r = await IDENTITY_REPOSITORY.setRole('user_test123', 'CUSTOMER', 'test-token');
     expect(r.role).toBe('CUSTOMER');
   });
 
-  it('sync updates existing user', async () => {
-    mockConvexQuery.mockResolvedValueOnce({ _id: 'd', clerkId: 'user_test123' });
-    mockConvexMutation.mockResolvedValueOnce('d');
-    const r = await IDENTITY_REPOSITORY.setRole('user_test123', 'OWNER');
-    expect(r.role).toBe('OWNER');
+  it('returns the existing database role without changing it', async () => {
+    mockConvexQuery.mockResolvedValueOnce({
+      _id: 'd',
+      clerkId: 'user_test123',
+      role: 'CUSTOMER',
+    });
+    const r = await IDENTITY_REPOSITORY.setRole('user_test123', 'OWNER', 'test-token');
+    expect(r.role).toBe('CUSTOMER');
+    expect(mockConvexMutation).not.toHaveBeenCalled();
   });
 
   it('fails closed on Convex error', async () => {
     mockConvexQuery.mockResolvedValueOnce(null); // user missing: hits mutation
     mockConvexMutation.mockRejectedValueOnce(new Error('convex down'));
-    await expect(IDENTITY_REPOSITORY.setRole('user_test123', 'CUSTOMER'))
-      .rejects.toThrow('Failed to synchronize');
+    await expect(
+      IDENTITY_REPOSITORY.setRole('user_test123', 'CUSTOMER', 'test-token'),
+    ).rejects.toThrow('convex down');
   });
 });

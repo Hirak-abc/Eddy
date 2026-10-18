@@ -4,6 +4,7 @@ import {
   Ticket, UserCheck, Zap, Star, Settings, ScanLine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MAX_DAILY_SCANS } from '@/lib/constants';
 
 const navItems = [
   { name: 'Home', path: '/customer/home', icon: Home },
@@ -61,7 +62,7 @@ export const CustomerSidebar = () => {
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-center gap-2 text-sm font-bold text-amber-300">
             <ScanLine size={16} />
-            3 scans left
+            Up to {MAX_DAILY_SCANS} scans per day
           </div>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Scan shop QR codes to earn coins & unlock spins.

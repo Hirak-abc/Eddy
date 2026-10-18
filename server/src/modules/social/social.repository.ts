@@ -1,5 +1,5 @@
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { makeFunctionReference } from 'convex/server';
+import type { GenericId } from 'convex/values';
 import { convexClient } from '../../integrations/convex/client';
 import type {
   SocialAccountRecord,
@@ -11,6 +11,69 @@ import type {
 const memoryAccounts = new Map<string, SocialAccountRecord>();
 const memoryPosts = new Map<string, SocialPostRecord>();
 
+const listAccountsByClerkId = makeFunctionReference<
+  'query',
+  { clerkUserId: string },
+  SocialAccountRecord[]
+>('social:listAccountsByClerkId');
+const getAccountById = makeFunctionReference<
+  'query',
+  { id: GenericId<'socialAccounts'> },
+  SocialAccountRecord | null
+>('social:getAccountById');
+const getAccountsByIds = makeFunctionReference<
+  'query',
+  { ids: string[] },
+  SocialAccountRecord[]
+>('social:getAccountsByIds');
+const upsertAccount = makeFunctionReference<
+  'mutation',
+  Omit<SocialAccountRecord, 'id' | 'createdAt' | 'updatedAt'>,
+  GenericId<'socialAccounts'>
+>('social:upsertAccount');
+const updateAccount = makeFunctionReference<
+  'mutation',
+  {
+    id: GenericId<'socialAccounts'>;
+    clerkUserId: string;
+    autoPublish?: boolean;
+    status?: SocialAccountRecord['status'];
+    encryptedAccessToken?: string;
+  },
+  GenericId<'socialAccounts'>
+>('social:updateAccount');
+const createPost = makeFunctionReference<
+  'mutation',
+  Omit<SocialPostRecord, 'id' | 'createdAt' | 'updatedAt' | 'externalResults'>,
+  GenericId<'socialPosts'>
+>('social:createPost');
+const getPostById = makeFunctionReference<
+  'query',
+  { id: GenericId<'socialPosts'> },
+  SocialPostRecord | null
+>('social:getPostById');
+const claimDuePosts = makeFunctionReference<
+  'mutation',
+  { nowIso: string; limit?: number },
+  SocialPostRecord[]
+>('social:claimDuePosts');
+const markPostResult = makeFunctionReference<
+  'mutation',
+  {
+    id: GenericId<'socialPosts'>;
+    status: SocialPostStatus;
+    externalResults?: SocialPostResult[];
+    errorCode?: string;
+    errorMessage?: string;
+  },
+  GenericId<'socialPosts'>
+>('social:markPostResult');
+const cancelPost = makeFunctionReference<
+  'mutation',
+  { id: GenericId<'socialPosts'>; clerkUserId: string },
+  GenericId<'socialPosts'>
+>('social:cancelPost');
+
 const toPublicSafe = (account: SocialAccountRecord): SocialAccountRecord => account;
 
 export const SOCIAL_REPOSITORY = {
@@ -21,7 +84,7 @@ export const SOCIAL_REPOSITORY = {
           account.clerkUserId === clerkUserId && account.status === 'ACTIVE',
       );
     }
-    const accounts = await convexClient.query(api.social.listAccountsByClerkId, {
+    const accounts = await convexClient.query(listAccountsByClerkId, {
       clerkUserId,
     });
     return (accounts as SocialAccountRecord[]) || [];
@@ -31,8 +94,8 @@ export const SOCIAL_REPOSITORY = {
     if (!convexClient) {
       return memoryAccounts.get(id) ?? null;
     }
-    const account = await convexClient.query(api.social.getAccountById, {
-      id: id as Id<'socialAccounts'>,
+    const account = await convexClient.query(getAccountById, {
+      id: id as GenericId<'socialAccounts'>,
     });
     return (account as SocialAccountRecord | null) ?? null;
   },
@@ -43,7 +106,7 @@ export const SOCIAL_REPOSITORY = {
         .map((id) => memoryAccounts.get(id))
         .filter((account): account is SocialAccountRecord => Boolean(account));
     }
-    const accounts = await convexClient.query(api.social.getAccountsByIds, {
+    const accounts = await convexClient.query(getAccountsByIds, {
       ids,
     });
     return (accounts as SocialAccountRecord[]) || [];
@@ -73,7 +136,7 @@ export const SOCIAL_REPOSITORY = {
       });
       return id;
     }
-    const id = await convexClient.mutation(api.social.upsertAccount, {
+    const id = await convexClient.mutation(upsertAccount, {
       clerkUserId: input.clerkUserId,
       businessId: input.businessId,
       platform: input.platform,
@@ -109,8 +172,8 @@ export const SOCIAL_REPOSITORY = {
       });
       return;
     }
-    await convexClient.mutation(api.social.updateAccount, {
-      id: id as Id<'socialAccounts'>,
+    await convexClient.mutation(updateAccount, {
+      id: id as GenericId<'socialAccounts'>,
       clerkUserId,
       ...patch,
     });
@@ -131,7 +194,7 @@ export const SOCIAL_REPOSITORY = {
       memoryPosts.set(id, record);
       return record;
     }
-    const id = await convexClient.mutation(api.social.createPost, {
+    const id = await convexClient.mutation(createPost, {
       clerkUserId: input.clerkUserId,
       accountIds: input.accountIds,
       imageUrl: input.imageUrl,
@@ -152,8 +215,8 @@ export const SOCIAL_REPOSITORY = {
     if (!convexClient) {
       return memoryPosts.get(id) ?? null;
     }
-    const post = await convexClient.query(api.social.getPostById, {
-      id: id as Id<'socialPosts'>,
+    const post = await convexClient.query(getPostById, {
+      id: id as GenericId<'socialPosts'>,
     });
     return (post as SocialPostRecord | null) ?? null;
   },
@@ -172,7 +235,7 @@ export const SOCIAL_REPOSITORY = {
         return next;
       });
     }
-    const claimed = await convexClient.mutation(api.social.claimDuePosts, {
+    const claimed = await convexClient.mutation(claimDuePosts, {
       nowIso,
       limit,
     });
@@ -199,8 +262,8 @@ export const SOCIAL_REPOSITORY = {
       });
       return;
     }
-    await convexClient.mutation(api.social.markPostResult, {
-      id: id as Id<'socialPosts'>,
+    await convexClient.mutation(markPostResult, {
+      id: id as GenericId<'socialPosts'>,
       status,
       ...extra,
     });
@@ -222,8 +285,8 @@ export const SOCIAL_REPOSITORY = {
       });
       return;
     }
-    await convexClient.mutation(api.social.cancelPost, {
-      id: id as Id<'socialPosts'>,
+    await convexClient.mutation(cancelPost, {
+      id: id as GenericId<'socialPosts'>,
       clerkUserId,
     });
   },

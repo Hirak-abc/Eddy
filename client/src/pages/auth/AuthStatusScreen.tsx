@@ -7,9 +7,19 @@ import { AUTH_BG_IMAGE } from './authTheme';
 interface AuthStatusScreenProps {
   message: string;
   error?: string | null;
+  errorTitle?: string;
+  errorAction?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
-export const AuthStatusScreen = ({ message, error }: AuthStatusScreenProps) => (
+export const AuthStatusScreen = ({
+  message,
+  error,
+  errorTitle,
+  errorAction,
+}: AuthStatusScreenProps) => (
   <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08111f] p-6">
     <FloatingThemeToggle />
     <img
@@ -29,14 +39,24 @@ export const AuthStatusScreen = ({ message, error }: AuthStatusScreenProps) => (
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-400">
             <AlertCircle size={22} />
           </div>
-          <h1 className="text-xl font-extrabold text-white">Something went wrong</h1>
+          <h1 className="text-xl font-extrabold text-white">{errorTitle ?? 'Something went wrong'}</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">{error}</p>
-          <Link
-            to={ROUTES.SIGN_IN}
-            className="mt-6 block rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/15"
-          >
-            Back to sign in
-          </Link>
+          {errorAction ? (
+            <button
+              type="button"
+              onClick={errorAction.onClick}
+              className="mt-6 block w-full rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/15"
+            >
+              {errorAction.label}
+            </button>
+          ) : (
+            <Link
+              to={ROUTES.SIGN_IN}
+              className="mt-6 block rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-white/15"
+            >
+              Back to sign in
+            </Link>
+          )}
         </>
       ) : (
         <>

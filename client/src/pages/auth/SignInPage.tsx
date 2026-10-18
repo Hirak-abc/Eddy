@@ -1,29 +1,30 @@
 import { SignIn } from '@clerk/clerk-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { FloatingThemeToggle } from '@/components/ThemeToggle';
 import { AUTH_BG_IMAGE, authAppearance } from './authTheme';
-
-const ROLE_STORAGE_KEY = 'eddy_auth_role';
+import {
+  getRememberedAuthFlowRole,
+  rememberAuthFlowRole,
+  rememberAuthRedirect,
+  resolveAuthFlowRole,
+} from '@/lib/authRedirect';
 
 export const SignInPage = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const paramRole = searchParams.get('role');
 
-  // Persist the role in sessionStorage when it arrives via query param so it
-  // survives Clerk's internal redirects (sso-callback, verify, etc.) that
-  // strip query parameters. On subsequent renders without the param we fall
-  // back to what was stored, defaulting to OWNER only as a last resort.
-  if (paramRole === 'CUSTOMER' || paramRole === 'OWNER') {
-    try { sessionStorage.setItem(ROLE_STORAGE_KEY, paramRole); } catch { /* private browsing */ }
+  const from = (location.state as { from?: unknown } | null)?.from;
+  if (typeof from === 'string') {
+    rememberAuthRedirect(from);
   }
 
-  let role: 'CUSTOMER' | 'OWNER' = 'OWNER';
-  try {
-    const stored = sessionStorage.getItem(ROLE_STORAGE_KEY);
-    role = stored === 'CUSTOMER' ? 'CUSTOMER' : paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
-  } catch {
-    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
-  }
+  const role = resolveAuthFlowRole(
+    paramRole,
+    getRememberedAuthFlowRole(),
+    location.pathname !== '/sign-in',
+  );
+  rememberAuthFlowRole(role);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#08111f] p-6">
@@ -45,6 +46,7 @@ export const SignInPage = () => {
             path="/sign-in"
             signUpUrl={`/sign-up?role=${role}`}
             fallbackRedirectUrl={`/complete-login?role=${role}`}
+            forceRedirectUrl={`/complete-login?role=${role}`}
             appearance={authAppearance}
           />
         </div>

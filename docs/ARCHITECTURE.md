@@ -348,6 +348,12 @@ Responsible for:
 Clerk remains responsible for authentication.
 
 The application stores the required application-specific user information in Convex.
+Convex validates Clerk JWTs using `CLERK_FRONTEND_API_URL`, which must match the
+issuer configured for the Clerk application. The client sends Clerk's session
+token; enable the Convex integration in Clerk so its session token includes the
+`convex` audience required by Convex's `applicationID: 'convex'`. Express verifies
+the Clerk token and loads the user's role from Convex; the browser's role metadata
+is not an authorization source.
 
 ## 7.2 Business Module
 
@@ -546,17 +552,17 @@ Customer Wallet
         │
         └── Coins
 
-Owner Wallet
+Owner Receivables
         │
-        └── Rupee-equivalent balance
+        └── Fixed settlement values in paise
 ```
 
 Customer rules:
 
 ```text
-1 coin = ₹1
 Minimum redemption = 50 coins
-Maximum balance = 100 coins
+Maximum wallet capacity = 100 available + reserved Coins
+Offer settlement value = fixed by the owner when the offer is created
 ```
 
 ---
@@ -572,21 +578,26 @@ sequenceDiagram
     participant O as Owner
 
     C->>API: Request coin redemption
-    API->>DB: Create pending transaction
-    API->>O: Notify owner
+    API->>DB: Reserve customer Coins
+    API-->>O: Show pending request in owner dashboard
 
     O->>API: Approve / Reject
 
     alt Approved
-        API->>DB: Deduct customer coins
-        API->>DB: Credit owner wallet
-        API->>DB: Mark transaction completed
-        API-->>C: Redemption successful
+        API->>DB: Move reserved Coins to spent and create receivable
+        Note over DB: Receivable is eligible after 14 days
+        O->>API: Request eligible settlement batch
+        API->>DB: Allocate eligible receivables
+        Note over API,DB: An administrator records PAID or FAILED manually; no money is transferred
     else Rejected
-        API->>DB: Mark transaction rejected
-        API-->>C: Redemption rejected
+        API->>DB: Release reserved Coins
     end
 ```
+
+Owners can submit eligible receivables as a settlement batch. An administrator records
+the outcome through `POST /api/settlements/batches/:batchId/outcome`; recording `PAID`
+requires a payment reference. This records the operator's assertion only and does not
+initiate a bank transfer or payment-provider transaction.
 
 ---
 
@@ -667,7 +678,7 @@ Business
     ↓
 Generate QR
     ↓
-Encode Business Identifier
+Encode Opaque Random Token
     ↓
 Customer Scans
     ↓
@@ -677,10 +688,11 @@ Shop Environment
 Example URL:
 
 ```text
-https://eddy.app/shop/{businessId}
+https://eddy.app/customer/scan?qrToken={opaqueToken}
 ```
 
-The QR should identify the business but should not contain sensitive information.
+New shop QRs are enabled immediately and can resolve or accept scans after creation.
+Owners can disable a QR from the shop QR page.
 
 ---
 
@@ -691,10 +703,12 @@ The backend tracks QR activity.
 Current rule:
 
 ```text
-Maximum QR scans = 3 / customer / day
+Maximum QR scans = 100 / customer / UTC day
 ```
 
-The frontend should display the remaining count, but the backend must enforce the limit.
+The scan date and timestamp are generated in Convex so clients cannot bypass the limit
+by submitting a different date. A scan records eligibility only; it does not credit Coins.
+Each accepted scan can be used for one server-authoritative spin.
 
 ```text
 Request
@@ -705,12 +719,17 @@ Identify Business
    ↓
 Check Daily Scan Count
    ↓
-If < 3
+If < 100
    → Record Scan
    → Continue
 Else
    → Reject
 ```
+
+Reward cycles contain exactly 100 shuffled outcomes per shop: 40 × 2 Coins, 20 × 3,
+10 × 4, 10 × 5, and 20 × 10. A spin is tied to its scan and can only be credited once.
+The customer's wallet is capped at 100 available plus reserved Coins; any overflow
+is reported but not credited.
 
 ---
 
@@ -1408,7 +1427,7 @@ Example:
 
 ```env
 NODE_ENV=development
-PORT=5000
+PORT=5001
 CLIENT_URL=http://localhost:5173
 
 CLERK_SECRET_KEY=

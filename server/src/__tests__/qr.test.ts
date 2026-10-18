@@ -6,6 +6,7 @@ vi.mock('../modules/qr/qr.repository', () => ({
   QR_REPOSITORY: {
     recordScan: vi.fn(),
     getScansCountToday: vi.fn(),
+    resolveQr: vi.fn(),
   },
 }));
 
@@ -14,45 +15,55 @@ describe('QR_SERVICE', () => {
     vi.clearAllMocks();
   });
 
-  it('records a scan and awards coins successfully when under limit', async () => {
+  it('records a verified QR scan without crediting coins before a spin', async () => {
     vi.mocked(QR_REPOSITORY.recordScan).mockResolvedValueOnce({
       scanId: 'scan_123',
-      scansCountToday: 5,
+      businessId: 'shop_1',
+      businessName: 'Test Shop',
+      category: 'Cafe',
+      address: 'Main Street',
+      scansToday: 5,
+      scansLeft: 95,
     });
 
-    const result = await QR_SERVICE.scanShopQr('cust_1', 'shop_1');
+    const result = await QR_SERVICE.scanShopQr('secure-opaque-qr-token', 'session-token');
 
     expect(result.scanId).toBe('scan_123');
     expect(result.scansToday).toBe(5);
     expect(result.scansLeft).toBe(95);
-    expect(result.coinsAwarded).toBe(10);
-    expect(result.message).toContain('+10 Eddy Coins');
+    expect(result.businessName).toBe('Test Shop');
+    expect(result.message).toContain('Spin now');
+    expect(QR_REPOSITORY.recordScan).toHaveBeenCalledWith(
+      'secure-opaque-qr-token',
+      'session-token',
+    );
   });
 
-  it('throws DAILY_SCAN_LIMIT_REACHED error when customer has scanned 100 times', async () => {
+  it('throws DAILY_SCAN_LIMIT_REACHED when the server rejects a scan over the limit', async () => {
     vi.mocked(QR_REPOSITORY.recordScan).mockRejectedValueOnce(
-      new Error('DAILY_SCAN_LIMIT_REACHED: Maximum 100 scans per customer per day.')
+      new Error('DAILY_SCAN_LIMIT_REACHED'),
     );
 
-    await expect(QR_SERVICE.scanShopQr('cust_1', 'shop_1')).rejects.toMatchObject({
-      code: 'DAILY_SCAN_LIMIT_REACHED',
+    await expect(
+      QR_SERVICE.scanShopQr('secure-opaque-qr-token', 'session-token'),
+    ).rejects.toMatchObject({ code: 'DAILY_SCAN_LIMIT_REACHED' });
+  });
+
+  it('rejects invalid and disabled QR tokens', async () => {
+    vi.mocked(QR_REPOSITORY.recordScan).mockRejectedValueOnce(new Error('INVALID_QR'));
+
+    await expect(
+      QR_SERVICE.scanShopQr('invalid-opaque-qr-token', 'session-token'),
+    ).rejects.toMatchObject({ code: 'INVALID_QR' });
+  });
+
+  it('returns customer scan eligibility status', async () => {
+    vi.mocked(QR_REPOSITORY.getScansCountToday).mockResolvedValueOnce({
+      scansToday: 10,
+      scansLeft: 90,
     });
-  });
 
-  it('rejects empty or invalid payload / missing businessId', async () => {
-    vi.mocked(QR_REPOSITORY.recordScan).mockRejectedValueOnce(
-      new Error('INVALID_BUSINESS_ID')
-    );
-
-    await expect(QR_SERVICE.scanShopQr('cust_1', '')).rejects.toBeDefined();
-  });
-
-  it('fetches correct scan status', async () => {
-    vi.mocked(QR_REPOSITORY.getScansCountToday).mockResolvedValueOnce(10);
-
-    const status = await QR_SERVICE.getScanStatus('cust_1');
-
-    expect(status.scansToday).toBe(10);
-    expect(status.scansLeft).toBe(90);
+    const status = await QR_SERVICE.getScanStatus('session-token');
+    expect(status).toEqual({ scansToday: 10, scansLeft: 90 });
   });
 });

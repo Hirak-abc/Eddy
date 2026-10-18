@@ -1,5 +1,6 @@
 # Keep images small and prevent leaking secrets / host deps
 node_modules/
+**/node_modules/
 dist/
 build/
 coverage/

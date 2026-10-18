@@ -1,71 +1,163 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Coins, Ticket, CheckCircle2, ChevronRight, ScanLine, Camera, AlertCircle } from 'lucide-react';
+import { CheckCircle2, ScanLine, Camera, AlertCircle, ChevronRight } from 'lucide-react';
+import type { IScannerControls } from '@zxing/browser';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { qrService } from '@/services/qr.service';
+import { getQrTokenFromQr } from '@/lib/shopQr';
+import { MAX_DAILY_SCANS } from '@/lib/constants';
 
 const STEPS = [
   { title: 'Point at the QR', detail: 'Find the Eddy standee at the billing counter.' },
-  { title: 'Earn coins instantly', detail: '+10 coins drop into your wallet on every valid scan.' },
-  { title: 'Spin & redeem', detail: 'Unlock the spin wheel and coupon codes for the shop.' },
+  { title: 'Verify the shop', detail: 'The server checks the permanent QR and your daily eligibility.' },
+  { title: 'Spin to win', detail: 'Your reward comes from the server and is credited to your wallet.' },
 ];
 
 export const ScanPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [phase, setPhase] = useState<'idle' | 'scanning' | 'done'>('idle');
-  const [scansLeft, setScansLeft] = useState(100);
-
-  // Real camera stream reference
+  const [scansLeft, setScansLeft] = useState(MAX_DAILY_SCANS);
+  const [scanId, setScanId] = useState<string | null>(null);
+  const [shopName, setShopName] = useState<string | null>(null);
+  const [shopAddress, setShopAddress] = useState<string | null>(null);
+  const [shopCategory, setShopCategory] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
+  const scanPendingRef = useRef(false);
+  const scanningEnabledRef = useRef(false);
+  const scannerSessionRef = useRef(0);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch initial scan status
-    qrService.getStatus().then((res) => {
+    let cancelled = false;
+    void qrService.getStatus().then((res) => {
+      if (cancelled) return;
       if (res.success && res.data) {
         setScansLeft(res.data.scansLeft);
+      } else {
+        toast.error(res.error?.message ?? 'Could not load your scan status.');
       }
     });
 
     return () => {
-      stopCamera();
+      cancelled = true;
+      scanningEnabledRef.current = false;
+      scannerSessionRef.current += 1;
+      controlsRef.current?.stop();
     };
   }, []);
 
-  const startCamera = async () => {
-    setCameraError(null);
+  const stopCamera = useCallback(() => {
+    scanningEnabledRef.current = false;
+    scannerSessionRef.current += 1;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+    setCameraActive(false);
+  }, []);
+
+  const handleQrToken = useCallback(async (qrToken: string) => {
+    if (scanPendingRef.current) return;
+    scanPendingRef.current = true;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
+      const response = await qrService.scanQr(qrToken);
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.message ?? 'Could not verify this QR scan.');
       }
-      setCameraActive(true);
-      setPhase('scanning');
-    } catch (err: any) {
-      console.error('Camera access error:', err);
-      setCameraError('Camera permission denied or camera not available. Use simulated detection or check permissions.');
-      setCameraActive(false);
+
+      setScansLeft(response.data.scansLeft);
+      setScanId(response.data.scanId);
+      setShopName(response.data.businessName);
+      setShopAddress(response.data.address);
+      setShopCategory(response.data.category);
+      setPhase('done');
+      stopCamera();
+      toast.success(response.data.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Could not verify this QR scan.';
+      console.error('QR scan failed:', error);
+      setCameraError(message);
+      toast.error(message);
+      stopCamera();
       setPhase('idle');
-      toast.error('Could not access camera. Please allow camera access.');
+    } finally {
+      scanPendingRef.current = false;
     }
+  }, [stopCamera]);
+
+  const handleDecodedQr = async (value: string) => {
+    if (scanPendingRef.current || !scanningEnabledRef.current) return;
+
+    const qrToken = getQrTokenFromQr(value, window.location.origin);
+    if (!qrToken) {
+      setCameraError('This QR code is not a valid Eddy shop standee. Scan the code printed by an active shop.');
+      toast.error('This is not a valid Eddy shop QR code.');
+      stopCamera();
+      setPhase('idle');
+      return;
+    }
+    await handleQrToken(qrToken);
   };
 
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+  const qrTokenFromUrl = searchParams.get('qrToken');
+  useEffect(() => {
+    if (qrTokenFromUrl && /^[A-Za-z0-9_-]{32,}$/.test(qrTokenFromUrl)) {
+      void handleQrToken(qrTokenFromUrl);
     }
-    setCameraActive(false);
+  }, [handleQrToken, qrTokenFromUrl]);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    scanPendingRef.current = false;
+    const session = ++scannerSessionRef.current;
+    scanningEnabledRef.current = true;
+    try {
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
+      if (session !== scannerSessionRef.current) return;
+      if (!videoRef.current) {
+        throw new Error('Camera preview is not ready. Please try again.');
+      }
+      const reader = new BrowserMultiFormatReader();
+      setCameraActive(true);
+      setPhase('scanning');
+      const controls = await reader.decodeFromConstraints(
+        { video: { facingMode: { ideal: 'environment' } } },
+        videoRef.current,
+        (result, _error, scannerControls) => {
+          controlsRef.current = scannerControls;
+          if (result) {
+            void handleDecodedQr(result.getText());
+          }
+        }
+      );
+      if (session !== scannerSessionRef.current) {
+        controls.stop();
+      } else {
+        controlsRef.current = controls;
+      }
+    } catch (error: unknown) {
+      if (session !== scannerSessionRef.current) return;
+      const message = error instanceof Error ? error.message : 'Camera access failed.';
+      console.error('Camera access error:', error);
+      setCameraError('Could not access or start the camera. Allow camera permission and try again.');
+      scanningEnabledRef.current = false;
+      setCameraActive(false);
+      setPhase('idle');
+      toast.error(message);
+    }
   };
 
   const handleReset = () => {
+    setScanId(null);
+    setShopName(null);
+    setShopAddress(null);
+    setShopCategory(null);
+    scanPendingRef.current = false;
     setPhase('idle');
     setCameraError(null);
   };
@@ -81,14 +173,13 @@ export const ScanPage = () => {
       <Card className="overflow-hidden border-slate-900 bg-slate-950 shadow-2xl">
         <CardContent className="p-6">
           <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-2xl bg-slate-900 flex items-center justify-center">
-            {cameraActive ? (
-              <video
-                ref={videoRef}
-                className="absolute inset-0 h-full w-full object-cover"
-                muted
-                playsInline
-              />
-            ) : (
+            <video
+              ref={videoRef}
+              className={cn('absolute inset-0 h-full w-full object-cover', !cameraActive && 'hidden')}
+              muted
+              playsInline
+            />
+            {!cameraActive && (
               <img
                 src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=800&q=80"
                 alt=""
@@ -142,21 +233,26 @@ export const ScanPage = () => {
           )}
 
           <div className="mt-5 flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-300">Scans left today (Max 100/day)</span>
+            <span className="font-semibold text-slate-300">Scans left today (Max {MAX_DAILY_SCANS}/day)</span>
             <span className={cn('font-black tabular-nums', scansLeft > 0 ? 'text-amber-400' : 'text-rose-400')}>
-              {scansLeft}/100
+              {scansLeft}/{MAX_DAILY_SCANS}
             </span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
-              style={{ width: `${(scansLeft / 100) * 100}%` }}
+              style={{ width: `${(scansLeft / MAX_DAILY_SCANS) * 100}%` }}
             />
           </div>
 
           {phase === 'done' ? (
             <div className="mt-5 grid grid-cols-2 gap-2.5">
-              <a href="#" onClick={(e) => { e.preventDefault(); }} className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-600">Open Shop & Spin</a>
+              <Button
+                onClick={() => scanId && navigate(`/customer/spin-wheel?scanId=${encodeURIComponent(scanId)}`)}
+                className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-600 w-full"
+              >
+                Spin Now
+              </Button>
               <Button
                 onClick={handleReset}
                 variant="outline"
@@ -193,30 +289,16 @@ export const ScanPage = () => {
 
       {/* Result cards */}
       {phase === 'done' && (
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="border-amber-200 bg-amber-50">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white">
-                <Coins size={20} />
-              </div>
-              <div>
-                <div className="text-xl font-black text-amber-700">+10 Coins Earned</div>
-                <div className="text-xs font-bold text-amber-600">Added to wallet</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-violet-200 bg-violet-50">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white">
-                <Ticket size={20} />
-              </div>
-              <div>
-                <div className="text-xl font-black text-violet-700">1</div>
-                <div className="text-xs font-bold text-violet-600">Spin unlocked</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="border-violet-200 bg-violet-50">
+          <CardContent className="space-y-1 p-4">
+            <div className="text-lg font-black text-violet-800">{shopName}</div>
+            <div className="text-sm font-semibold text-violet-700">{shopCategory}</div>
+            <div className="text-xs text-violet-600">{shopAddress}</div>
+            <p className="pt-2 text-xs font-semibold text-violet-700">
+              Shop identity verified. Spin to receive a server-selected reward.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {/* How it works */}

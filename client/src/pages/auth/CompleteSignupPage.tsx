@@ -5,8 +5,12 @@ import { api } from '../../services/api';
 import { ROUTES } from '../../lib/constants';
 import type { UserRole } from '../../types';
 import { AuthStatusScreen } from './AuthStatusScreen';
-
-const ROLE_STORAGE_KEY = 'eddy_auth_role';
+import {
+  clearAuthFlowState,
+  consumeAuthRedirect,
+  getRememberedAuthFlowRole,
+  resolveAuthFlowRole,
+} from '@/lib/authRedirect';
 
 export const CompleteSignupPage = () => {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -17,30 +21,48 @@ export const CompleteSignupPage = () => {
   const hasStarted = useRef(false);
 
   const paramRole = searchParams.get('role');
-  let role: UserRole = 'OWNER';
-  try {
-    const stored = sessionStorage.getItem(ROLE_STORAGE_KEY);
-    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : stored === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
-  } catch {
-    role = paramRole === 'CUSTOMER' ? 'CUSTOMER' : 'OWNER';
-  }
+  const role: UserRole = resolveAuthFlowRole(
+    paramRole,
+    getRememberedAuthFlowRole(),
+    true,
+  );
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || hasStarted.current) return;
     hasStarted.current = true;
 
     const assignRole = async () => {
-      const response = await api.post<{ role: UserRole }>('/identity/role', { role });
-      if (!response.success) {
-        setError(response.error?.message ?? 'Unable to complete account setup.');
-        return;
-      }
+      try {
+        const response = await api.post<{ role: UserRole }>('/identity/role', { role });
+        if (!response.success || response.data === null) {
+          setError(response.error?.message ?? 'Unable to complete account setup.');
+          return;
+        }
 
-      await getToken({ skipCache: true });
-      await user?.reload();
-      navigate(role === 'OWNER' ? ROUTES.OWNER_DASHBOARD : ROUTES.CUSTOMER_HOME, {
-        replace: true,
-      });
+        await getToken({ skipCache: true });
+        await user?.reload();
+        const resolvedRole = response.data.role;
+        if (resolvedRole !== role && resolvedRole !== 'ADMIN') {
+          setError(
+            `This account is registered as ${resolvedRole.toLowerCase()}, not ${role.toLowerCase()}. Sign in with a ${role.toLowerCase()} account instead.`,
+          );
+          return;
+        }
+        const redirectTo = consumeAuthRedirect(resolvedRole);
+        clearAuthFlowState();
+        navigate(
+          redirectTo
+            ?? (resolvedRole === 'OWNER' || resolvedRole === 'ADMIN'
+              ? ROUTES.OWNER_DASHBOARD
+              : ROUTES.CUSTOMER_HOME),
+          {
+            replace: true,
+          },
+        );
+      } catch (signupError) {
+        console.error('Sign-up completion failed:', signupError);
+        setError('We could not complete account setup. Please try again.');
+      }
     };
 
     void assignRole();
