@@ -8,12 +8,16 @@ import { notifyWalletUpdated } from '@/services/wallet.service';
 import { toast } from 'sonner';
 
 const REWARDS = [
-  { coins: 2, probability: 40, center: 72 },
-  { coins: 3, probability: 20, center: 180 },
-  { coins: 4, probability: 10, center: 234 },
-  { coins: 5, probability: 10, center: 270 },
-  { coins: 10, probability: 20, center: 324 },
+  { coins: 2, probability: 40, center: 36, color: '#fbbf24', textColor: '#0f172a' },
+  { coins: 3, probability: 20, center: 108, color: '#fdba74', textColor: '#0f172a' },
+  { coins: 4, probability: 10, center: 180, color: '#a78bfa', textColor: '#ffffff' },
+  { coins: 5, probability: 10, center: 252, color: '#fb7185', textColor: '#ffffff' },
+  { coins: 10, probability: 20, center: 324, color: '#8b5cf6', textColor: '#ffffff' },
 ];
+
+const wheelGradient = `conic-gradient(${REWARDS.map((reward, index) =>
+  `${reward.color} ${index * 72}deg ${(index + 1) * 72}deg`,
+).join(',')})`;
 
 export const SpinWheelPage = () => {
   const [searchParams] = useSearchParams();
@@ -77,15 +81,24 @@ export const SpinWheelPage = () => {
               className="absolute inset-2 rounded-full border-8 border-white shadow-xl transition-transform duration-[3000ms] ease-out"
               style={{
                 transform: `rotate(${rotation}deg)`,
-                background: 'conic-gradient(#fbbf24 0deg 144deg,#fdba74 144deg 216deg,#a78bfa 216deg 252deg,#fb7185 252deg 288deg,#8b5cf6 288deg 360deg)',
+                background: wheelGradient,
               }}
               aria-label="Reward wheel"
             >
-              <span className="absolute bottom-[24%] right-[18%] font-black text-slate-950">2</span>
-              <span className="absolute bottom-[13%] left-1/2 -translate-x-1/2 font-black text-slate-950">3</span>
-              <span className="absolute bottom-[23%] left-[18%] font-black text-white">4</span>
-              <span className="absolute left-[11%] top-1/2 -translate-y-1/2 font-black text-white">5</span>
-              <span className="absolute left-[18%] top-[20%] font-black text-white">10</span>
+              {REWARDS.map((reward) => {
+                const radians = (reward.center * Math.PI) / 180;
+                const left = 50 + 32 * Math.sin(radians);
+                const top = 50 - 32 * Math.cos(radians);
+                return (
+                  <span
+                    key={reward.coins}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 font-black"
+                    style={{ left: `${left}%`, top: `${top}%`, color: reward.textColor }}
+                  >
+                    {reward.coins}
+                  </span>
+                );
+              })}
               <div className="absolute inset-[37%] flex items-center justify-center rounded-full border-4 border-amber-200 bg-white shadow-lg">
                 <Sparkles className="text-amber-500" size={26} />
               </div>

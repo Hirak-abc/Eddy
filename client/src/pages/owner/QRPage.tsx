@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { businessService, type OwnerBusiness, type RedeemableOffer } from '@/services/business.service';
+import { businessService, type OwnerBusiness } from '@/services/business.service';
 import { redemptionService, type Redemption } from '@/services/redemption.service';
 import { settlementService, type OwnerSettlementSummary } from '@/services/settlement.service';
 
@@ -13,15 +13,8 @@ const formatRupees = (paise: number) =>
   new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     .format(paise / 100);
 
-const rupeesToPaise = (value: string) => {
-  const match = value.trim().match(/^(\d+)(?:\.(\d{1,2}))?$/);
-  if (!match) return null;
-  return Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
-};
-
 export const QRPage = () => {
   const [business, setBusiness] = useState<OwnerBusiness | null>(null);
-  const [offers, setOffers] = useState<RedeemableOffer[]>([]);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [settlements, setSettlements] = useState<OwnerSettlementSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,10 +23,6 @@ export const QRPage = () => {
   const [shopName, setShopName] = useState('');
   const [category, setCategory] = useState('');
   const [address, setAddress] = useState('');
-  const [offerName, setOfferName] = useState('');
-  const [offerDescription, setOfferDescription] = useState('');
-  const [offerCoins, setOfferCoins] = useState('50');
-  const [offerValueRupees, setOfferValueRupees] = useState('50');
   const [qrPng, setQrPng] = useState<string | null>(null);
   const [qrSvg, setQrSvg] = useState<string | null>(null);
 
@@ -47,14 +36,13 @@ export const QRPage = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [businessResponse, offersResponse, redemptionResponse, settlementResponse] =
+    const [businessResponse, redemptionResponse, settlementResponse] =
       await Promise.all([
         businessService.getMine(),
-        businessService.getMyOffers(),
         redemptionService.listOwner(),
         settlementService.getMine(),
       ]);
-    const failed = [businessResponse, offersResponse, redemptionResponse, settlementResponse]
+    const failed = [businessResponse, redemptionResponse, settlementResponse]
       .find((response) => !response.success);
     if (failed) {
       setError(failed.error?.message ?? 'Shop rewards data could not be loaded.');
@@ -72,7 +60,6 @@ export const QRPage = () => {
       ownerBusiness = activationResponse.data;
     }
     setBusiness(ownerBusiness);
-    setOffers(offersResponse.data ?? []);
     setRedemptions(redemptionResponse.data ?? []);
     setSettlements(settlementResponse.data);
     setLoading(false);
@@ -119,34 +106,6 @@ export const QRPage = () => {
     } else {
       setBusiness(response.data);
       toast.success('Shop profile saved. An administrator must verify it before its QR becomes active.');
-      await loadData();
-    }
-    setSaving(false);
-  };
-
-  const handleCreateOffer = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const settlementValuePaise = rupeesToPaise(offerValueRupees);
-    const coinsCost = Number(offerCoins);
-    if (!Number.isInteger(coinsCost) || coinsCost < 50 || coinsCost > 100 || settlementValuePaise === null) {
-      toast.error('Enter a 50–100 Coin cost and a rupee value with at most two decimal places.');
-      return;
-    }
-    setSaving(true);
-    const response = await businessService.createOffer({
-      name: offerName,
-      description: offerDescription || undefined,
-      coinsCost,
-      settlementValuePaise,
-    });
-    if (!response.success) {
-      toast.error(response.error?.message ?? 'Could not create the reward offer.');
-    } else {
-      setOfferName('');
-      setOfferDescription('');
-      setOfferCoins('50');
-      setOfferValueRupees('50');
-      toast.success('Redeemable offer created.');
       await loadData();
     }
     setSaving(false);
@@ -205,10 +164,10 @@ export const QRPage = () => {
 
   return (
     <div className="space-y-8 pb-12">
-      <header>
+      <header className="text-center">
         <p className="text-xs font-bold uppercase tracking-wider text-blue-600">In-store rewards</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Shop QR & settlement</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-500">
+        <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-500">
           One permanent QR per shop. Scan eligibility, rewards, wallet changes, and settlement amounts are validated by Eddy.
         </p>
       </header>
@@ -239,9 +198,9 @@ export const QRPage = () => {
         </Card>
       ) : (
         <>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardContent className="space-y-5 p-6">
+          <div className="mx-auto grid w-full max-w-2xl gap-6">
+            <Card className="overflow-hidden border-slate-200 shadow-xl shadow-indigo-950/5">
+              <CardContent className="space-y-6 p-5 sm:p-8">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
@@ -261,19 +220,21 @@ export const QRPage = () => {
 
                 {shopUrl && qrPng ? (
                   <>
-                    <div id="eddy-standee" className="mx-auto flex max-w-sm flex-col items-center gap-4 rounded-3xl bg-gradient-to-b from-slate-950 to-indigo-950 p-7 text-center text-white print:bg-white print:text-black print:shadow-none">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-xl font-black">E</div>
+                    <div id="eddy-standee" className="mx-auto flex max-w-sm flex-col items-center gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950 to-violet-950 p-7 text-center text-white shadow-2xl shadow-indigo-950/25 ring-1 ring-indigo-950/5 print:border-0 print:bg-white print:text-black print:shadow-none print:ring-0">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-black shadow-lg shadow-indigo-950/40 ring-1 ring-white/20">E</div>
                       <div>
-                        <p className="text-2xl font-black">Eddy</p>
-                        <h3 className="mt-1 text-lg font-extrabold">{business.name}</h3>
+                        <p className="text-3xl font-black tracking-tight">Eddy</p>
+                        <h3 className="mt-2 text-lg font-extrabold">{business.name}</h3>
                         <p className="text-xs opacity-80">{business.address}</p>
                       </div>
-                      <p className="text-base font-bold text-amber-300 print:text-black">Scan & Spin to Win Eddy Coins</p>
-                      <img src={qrPng} alt={`Permanent QR for ${business.name}`} className="h-56 w-56 rounded-xl bg-white p-2" />
-                      <p className="font-bold">1 Eddy Coin = ₹1</p>
-                      <p className="text-xs">Open Eddy, scan this code, sign in, and spin to receive your reward.</p>
+                      <p className="rounded-full bg-amber-300/10 px-4 py-2 text-sm font-bold text-amber-300 ring-1 ring-amber-200/20 print:bg-transparent print:text-black print:ring-0">Scan & Spin to Win Eddy Coins</p>
+                      <div className="rounded-2xl bg-white p-3 shadow-xl shadow-black/20 ring-1 ring-slate-900/10">
+                        <img src={qrPng} alt={`Permanent QR for ${business.name}`} className="h-56 w-56 rounded-lg" />
+                      </div>
+                      <p className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold ring-1 ring-white/10 print:bg-transparent print:text-black print:ring-0">1 Eddy Coin = ₹1</p>
+                      <p className="max-w-xs text-xs leading-relaxed text-slate-200">Open Eddy, scan this code, sign in, and spin to receive your reward.</p>
                     </div>
-                    <div className="flex flex-wrap gap-2 print:hidden">
+                    <div className="flex flex-wrap justify-center gap-2 print:hidden">
                       <Button onClick={() => window.print()} disabled={!business.qrEnabled}><Printer size={16} className="mr-2" />Print standee</Button>
                       <Button variant="outline" onClick={() => handleDownload('png')}><FileDown size={16} className="mr-2" />PNG</Button>
                       <Button variant="outline" onClick={() => handleDownload('svg')}><FileDown size={16} className="mr-2" />SVG</Button>
@@ -290,35 +251,6 @@ export const QRPage = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="space-y-4 p-6">
-                <div>
-                  <h2 className="text-lg font-extrabold text-slate-900">Redeemable shop offers</h2>
-                  <p className="text-sm text-slate-500">The server stores the Coin cost and fixed settlement value in paise.</p>
-                </div>
-                {!business.qrEnabled && (
-                  <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Enable the shop QR before adding offers.</p>
-                )}
-                <form onSubmit={handleCreateOffer} className="space-y-3">
-                  <Input required minLength={2} maxLength={100} value={offerName} onChange={(event) => setOfferName(event.target.value)} placeholder="Reward item name" aria-label="Reward item name" />
-                  <Input maxLength={300} value={offerDescription} onChange={(event) => setOfferDescription(event.target.value)} placeholder="Description (optional)" aria-label="Offer description" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input required type="number" min={50} max={100} step={1} value={offerCoins} onChange={(event) => setOfferCoins(event.target.value)} aria-label="Coin cost" />
-                    <Input required inputMode="decimal" pattern="[0-9]+(\\.[0-9]{1,2})?" value={offerValueRupees} onChange={(event) => setOfferValueRupees(event.target.value)} aria-label="Settlement value in rupees" placeholder="Settlement value ₹" />
-                  </div>
-                  <Button type="submit" disabled={saving || !business.qrEnabled}>Add offer</Button>
-                </form>
-                <ul className="divide-y divide-slate-100">
-                  {offers.map((offer) => (
-                    <li key={offer._id} className="flex justify-between gap-3 py-3 text-sm">
-                      <span className="font-bold text-slate-800">{offer.name}</span>
-                      <span className="shrink-0 text-right text-slate-600">{offer.coinsCost} Coins · ₹{formatRupees(offer.settlementValuePaise)}</span>
-                    </li>
-                  ))}
-                  {!offers.length && <li className="py-3 text-sm text-slate-500">No active offers yet.</li>}
-                </ul>
-              </CardContent>
-            </Card>
           </div>
 
           <Card>

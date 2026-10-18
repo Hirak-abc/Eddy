@@ -10,7 +10,7 @@ export default function App() {
   const { getToken } = useClerkAuth();
 
   useEffect(() => {
-    setAuthTokenGetter(getToken);
+    setAuthTokenGetter(() => getToken());
     return () => setAuthTokenGetter(null);
   }, [getToken]);
 

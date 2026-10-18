@@ -349,8 +349,11 @@ Clerk remains responsible for authentication.
 
 The application stores the required application-specific user information in Convex.
 Convex validates Clerk JWTs using `CLERK_FRONTEND_API_URL`, which must match the
-issuer configured for the Clerk application. Express verifies the Clerk token and
-loads the user's role from Convex; the browser's role metadata is not an authorization source.
+issuer configured for the Clerk application. The client sends Clerk's session
+token; enable the Convex integration in Clerk so its session token includes the
+`convex` audience required by Convex's `applicationID: 'convex'`. Express verifies
+the Clerk token and loads the user's role from Convex; the browser's role metadata
+is not an authorization source.
 
 ## 7.2 Business Module
 

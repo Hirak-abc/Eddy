@@ -7,7 +7,7 @@
 #
 # Usage (colleague only needs Docker Desktop, no matching Node/npm install):
 #   1. cp .env.example server/.env   (then fill in real secrets locally — do NOT commit)
-#   2. docker compose up --build
+#   2. docker compose --env-file server/.env up --build
 #   3. open http://localhost:5173 (client) and http://localhost:5000/health (server)
 
 services:
@@ -42,8 +42,8 @@ services:
       # at localhost and would fail from inside the container).
       # Server uses open cors() in server/src/app.ts, so this works.
       - VITE_API_URL=http://localhost:5001/api
-      # Pass through if set in your shell; otherwise set in client/.env.local (git-ignored)
-      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-}
+      # Map only Clerk's public publishable key; keep server secrets server-side.
+      - VITE_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
       - VITE_GA_MEASUREMENT_ID=${VITE_GA_MEASUREMENT_ID:-}
     volumes:
       - ./client/src:/app/client/src
