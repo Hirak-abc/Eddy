@@ -7,6 +7,9 @@ import walletRoutes from './wallet/wallet.routes';
 import businessRoutes from './business/business.routes';
 import redemptionRoutes from './redemptions/redemptions.routes';
 import settlementRoutes from './settlements/settlements.routes';
+import businessProfileRoutes from './business-profile/business-profile.routes';
+import flyerRoutes from './flyer/flyer.routes';
+import couponRoutes from './coupons/coupons.routes';
 
 const apiRoutes = Router();
 
@@ -23,6 +26,8 @@ apiRoutes.use('/rewards', rewardsRoutes);
 apiRoutes.use('/wallet', walletRoutes);
 apiRoutes.use('/redemptions', redemptionRoutes);
 apiRoutes.use('/settlements', settlementRoutes);
-// apiRoutes.use('/businesses', businessRoutes);
+apiRoutes.use('/business-profile', businessProfileRoutes);
+apiRoutes.use('/flyers', flyerRoutes);
+apiRoutes.use('/coupons', couponRoutes);
 
 export default apiRoutes;

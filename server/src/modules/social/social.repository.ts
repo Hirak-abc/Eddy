@@ -8,71 +8,94 @@ import type {
   SocialPostStatus,
 } from './social.types';
 
-const memoryAccounts = new Map<string, SocialAccountRecord>();
-const memoryPosts = new Map<string, SocialPostRecord>();
+type SocialAccountId = GenericId<'socialAccounts'>;
+type SocialPostId = GenericId<'socialPosts'>;
 
 const listAccountsByClerkId = makeFunctionReference<
   'query',
   { clerkUserId: string },
-  SocialAccountRecord[]
+  unknown
 >('social:listAccountsByClerkId');
 const getAccountById = makeFunctionReference<
   'query',
-  { id: GenericId<'socialAccounts'> },
-  SocialAccountRecord | null
+  { id: SocialAccountId },
+  unknown
 >('social:getAccountById');
 const getAccountsByIds = makeFunctionReference<
   'query',
   { ids: string[] },
-  SocialAccountRecord[]
+  unknown
 >('social:getAccountsByIds');
 const upsertAccount = makeFunctionReference<
   'mutation',
-  Omit<SocialAccountRecord, 'id' | 'createdAt' | 'updatedAt'>,
-  GenericId<'socialAccounts'>
+  {
+    clerkUserId: string;
+    businessId?: string;
+    platform: SocialAccountRecord['platform'];
+    externalId: string;
+    name?: string;
+    username?: string;
+    encryptedAccessToken?: string;
+    tokenExpiresAt?: number;
+    autoPublish?: boolean;
+    status?: SocialAccountRecord['status'];
+  },
+  unknown
 >('social:upsertAccount');
 const updateAccount = makeFunctionReference<
   'mutation',
   {
-    id: GenericId<'socialAccounts'>;
+    id: SocialAccountId;
     clerkUserId: string;
     autoPublish?: boolean;
     status?: SocialAccountRecord['status'];
     encryptedAccessToken?: string;
   },
-  GenericId<'socialAccounts'>
+  unknown
 >('social:updateAccount');
 const createPost = makeFunctionReference<
   'mutation',
-  Omit<SocialPostRecord, 'id' | 'createdAt' | 'updatedAt' | 'externalResults'>,
-  GenericId<'socialPosts'>
+  {
+    clerkUserId: string;
+    flyerId?: string;
+    accountIds: string[];
+    imageUrl: string;
+    caption?: string;
+    mode: SocialPostRecord['mode'];
+    scheduledAt: string;
+    status?: SocialPostStatus;
+  },
+  unknown
 >('social:createPost');
 const getPostById = makeFunctionReference<
   'query',
-  { id: GenericId<'socialPosts'> },
-  SocialPostRecord | null
+  { id: SocialPostId },
+  unknown
 >('social:getPostById');
 const claimDuePosts = makeFunctionReference<
   'mutation',
   { nowIso: string; limit?: number },
-  SocialPostRecord[]
+  unknown
 >('social:claimDuePosts');
 const markPostResult = makeFunctionReference<
   'mutation',
   {
-    id: GenericId<'socialPosts'>;
+    id: SocialPostId;
     status: SocialPostStatus;
     externalResults?: SocialPostResult[];
     errorCode?: string;
     errorMessage?: string;
   },
-  GenericId<'socialPosts'>
+  unknown
 >('social:markPostResult');
 const cancelPost = makeFunctionReference<
   'mutation',
-  { id: GenericId<'socialPosts'>; clerkUserId: string },
-  GenericId<'socialPosts'>
+  { id: SocialPostId; clerkUserId: string },
+  unknown
 >('social:cancelPost');
+
+const memoryAccounts = new Map<string, SocialAccountRecord>();
+const memoryPosts = new Map<string, SocialPostRecord>();
 
 const toPublicSafe = (account: SocialAccountRecord): SocialAccountRecord => account;
 
@@ -95,7 +118,7 @@ export const SOCIAL_REPOSITORY = {
       return memoryAccounts.get(id) ?? null;
     }
     const account = await convexClient.query(getAccountById, {
-      id: id as GenericId<'socialAccounts'>,
+      id: id as SocialAccountId,
     });
     return (account as SocialAccountRecord | null) ?? null;
   },
@@ -173,7 +196,7 @@ export const SOCIAL_REPOSITORY = {
       return;
     }
     await convexClient.mutation(updateAccount, {
-      id: id as GenericId<'socialAccounts'>,
+      id: id as SocialAccountId,
       clerkUserId,
       ...patch,
     });
@@ -196,6 +219,7 @@ export const SOCIAL_REPOSITORY = {
     }
     const id = await convexClient.mutation(createPost, {
       clerkUserId: input.clerkUserId,
+      flyerId: input.flyerId,
       accountIds: input.accountIds,
       imageUrl: input.imageUrl,
       caption: input.caption,
@@ -216,7 +240,7 @@ export const SOCIAL_REPOSITORY = {
       return memoryPosts.get(id) ?? null;
     }
     const post = await convexClient.query(getPostById, {
-      id: id as GenericId<'socialPosts'>,
+      id: id as SocialPostId,
     });
     return (post as SocialPostRecord | null) ?? null;
   },
@@ -263,7 +287,7 @@ export const SOCIAL_REPOSITORY = {
       return;
     }
     await convexClient.mutation(markPostResult, {
-      id: id as GenericId<'socialPosts'>,
+      id: id as SocialPostId,
       status,
       ...extra,
     });
@@ -286,7 +310,7 @@ export const SOCIAL_REPOSITORY = {
       return;
     }
     await convexClient.mutation(cancelPost, {
-      id: id as GenericId<'socialPosts'>,
+      id: id as SocialPostId,
       clerkUserId,
     });
   },

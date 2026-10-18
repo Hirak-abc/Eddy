@@ -1,273 +1,282 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  Sparkles,
+  CalendarClock,
+  CircleAlert,
+  Clock3,
+  LoaderCircle,
   Plus,
-  Clock,
   Send,
-  Eye,
-  Ticket,
-  TrendingUp,
-  Flame,
-  CheckCircle2,
-} from 'lucide-react';
-import { useOwner, type ExtendedFlyer } from '@/context/OwnerContext';
-import { ROUTES } from '@/lib/constants';
-import { Button } from '@/components/ui/Button';
-import { FlyerLightboxModal } from '@/components/FlyerLightboxModal';
+  Sparkles,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/Button";
+import { ROUTES } from "@/lib/constants";
+import { flyerService, type Flyer } from "@/services/flyer.service";
+
+const filters = ["ALL", "GENERATING", "READY", "SCHEDULED", "PUBLISHED", "FAILED"] as const;
+type FlyerFilter = (typeof filters)[number];
+
+const localDateTime = (value: string) => {
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+};
 
 export const FlyersDashboardPage = () => {
-  const { trendFlyer, scheduledFlyers, publishedFlyers, publishFlyerNow } = useOwner();
-  const [activeTab, setActiveTab] = useState<'ALL' | 'SCHEDULED' | 'PUBLISHED'>('ALL');
-  const [selectedFlyerForModal, setSelectedFlyerForModal] = useState<ExtendedFlyer | null>(null);
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [filter, setFilter] = useState<FlyerFilter>("ALL");
+  const [scheduleTimes, setScheduleTimes] = useState<Record<string, string>>({});
+  const [busyFlyerId, setBusyFlyerId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allFlyers: ExtendedFlyer[] = [
-    ...(trendFlyer ? [trendFlyer] : []),
-    ...scheduledFlyers,
-    ...publishedFlyers,
-  ];
+  const refresh = useCallback(async () => {
+    const response = await flyerService.list();
+    if (!response.success || !response.data) {
+      toast.error(response.error?.message || "Could not load Flyer Studio.");
+    } else {
+      setFlyers(response.data.flyers);
+    }
+    setIsLoading(false);
+  }, []);
 
-  const filteredFlyers = allFlyers.filter((f) => {
-    if (activeTab === 'SCHEDULED') return f.status === 'SCHEDULED';
-    if (activeTab === 'PUBLISHED') return f.status === 'PUBLISHED';
-    return true;
-  });
+  useEffect(() => {
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 5000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
 
-  const scheduledCount = allFlyers.filter((f) => f.status === 'SCHEDULED').length;
-  const publishedCount = allFlyers.filter((f) => f.status === 'PUBLISHED').length;
-  const totalReach = allFlyers.reduce((acc, f) => acc + (f.stats?.reach || 0), 0);
+  const filteredFlyers = useMemo(
+    () =>
+      filter === "ALL"
+        ? flyers
+        : flyers.filter((flyer) => flyer.status === filter),
+    [filter, flyers],
+  );
+
+  const handlePublishNow = async (flyer: Flyer) => {
+    setBusyFlyerId(flyer.id);
+    const response = await flyerService.publishNow(flyer.id);
+    if (!response.success) {
+      toast.error(response.error?.message || "Could not publish this flyer.");
+    } else {
+      toast.success("Flyer published to Facebook and Instagram.");
+      await refresh();
+    }
+    setBusyFlyerId(null);
+  };
+
+  const handleSchedule = async (flyer: Flyer) => {
+    const localValue = scheduleTimes[flyer.id];
+    const scheduledAt = localValue ? new Date(localValue) : null;
+    if (!scheduledAt || Number.isNaN(scheduledAt.getTime()) || scheduledAt <= new Date()) {
+      toast.error("Choose a future date and time.");
+      return;
+    }
+    setBusyFlyerId(flyer.id);
+    const response = await flyerService.schedule(
+      flyer.id,
+      scheduledAt.toISOString(),
+    );
+    if (!response.success) {
+      toast.error(response.error?.message || "Could not schedule this flyer.");
+    } else {
+      toast.success(
+        `Flyer scheduled for ${scheduledAt.toLocaleString("en-IN")}.`,
+      );
+      await refresh();
+    }
+    setBusyFlyerId(null);
+  };
 
   return (
     <div className="space-y-6 pb-12">
-      {/* ── Top Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Marketing</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-xs font-medium text-slate-500">Campaign Management</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            AI Flyer Studio
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline" className="rounded-xl text-xs font-bold border-slate-200">
-            <Link to={ROUTES.OWNER_TRENDS} className="flex items-center gap-1.5">
-              <Flame size={14} className="text-amber-500" />
-              <span>Trend Radar</span>
-            </Link>
-          </Button>
-
-          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm">
-            <Link to={ROUTES.OWNER_CREATE_FLYER} className="flex items-center gap-1.5">
-              <Plus size={15} />
-              <span>Create AI Flyer</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Stats Summary Strip ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Campaigns</span>
-          <div className="text-2xl font-black text-slate-900 font-mono">{allFlyers.length}</div>
-          <p className="text-[11px] text-slate-400">Created with xAI</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-          <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1">
-            <Clock size={12} /> Scheduled Queue
-          </span>
-          <div className="text-2xl font-black text-indigo-600 font-mono">{scheduledCount}</div>
-          <p className="text-[11px] text-slate-400">48h auto-publish</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-            <CheckCircle2 size={12} /> Live on Meta
-          </span>
-          <div className="text-2xl font-black text-emerald-600 font-mono">{publishedCount}</div>
-          <p className="text-[11px] text-slate-400">Instagram & Facebook</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-          <span className="text-xs font-bold text-sky-600 uppercase tracking-wider flex items-center gap-1">
-            <TrendingUp size={12} /> Total Social Reach
-          </span>
-          <div className="text-2xl font-black text-slate-900 font-mono">{totalReach.toLocaleString('en-IN')}</div>
-          <p className="text-[11px] text-slate-400">+18% organic growth</p>
-        </div>
-      </div>
-
-      {/* ── Tabs & Filter ───────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl">
-          {(['ALL', 'SCHEDULED', 'PUBLISHED'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === tab
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              {tab === 'ALL' && 'All Campaigns'}
-              {tab === 'SCHEDULED' && `Scheduled (${scheduledCount})`}
-              {tab === 'PUBLISHED' && `Published (${publishedCount})`}
-            </button>
-          ))}
-        </div>
-
-        <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-          Showing {filteredFlyers.length} flyer{filteredFlyers.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      {/* ── Flyer Cards Grid ────────────────────────────────────────────────── */}
-      {filteredFlyers.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-            <Sparkles size={24} />
-          </div>
-          <h3 className="font-bold text-slate-900">No flyers found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            You don't have any flyers in this view. Generate a high-converting promotional flyer using AI now.
+          <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+            Owner dashboard
           </p>
-          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs">
-            <Link to={ROUTES.OWNER_CREATE_FLYER}>Generate First Flyer</Link>
-          </Button>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Flyer Studio
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Track AI generation, review flyers, and manage publishing to both
+            social accounts.
+          </p>
+        </div>
+        <Button
+          asChild
+          className="rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+        >
+          <Link to={ROUTES.OWNER_CREATE_FLYER}>
+            <Plus size={16} className="mr-1.5" />
+            Create custom flyer
+          </Link>
+        </Button>
+      </header>
+
+      <section className="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4">
+        <p className="flex items-center gap-2 text-sm font-bold text-indigo-950">
+          <Sparkles size={16} /> Automatic flyer flow
+        </p>
+        <p className="mt-1 text-sm text-indigo-900/80">
+          Saving all three business photos queues an AI flyer using one randomly
+          selected photo. One flyer total can be generated every 72 hours. Each
+          flyer is scheduled to Facebook and Instagram 72 hours after generation;
+          you can change its time or post a custom flyer now.
+        </p>
+      </section>
+
+      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label="Flyer filters">
+        {filters.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setFilter(item)}
+            aria-pressed={filter === item}
+            className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition ${
+              filter === item
+                ? "bg-slate-900 text-white"
+                : "bg-white text-slate-600 ring-1 ring-slate-200"
+            }`}
+          >
+            {item === "ALL" ? "All flyers" : item.toLowerCase()}
+            {item !== "ALL" &&
+              ` (${flyers.filter((flyer) => flyer.status === item).length})`}
+          </button>
+        ))}
+      </nav>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2 rounded-2xl bg-white py-16 text-sm text-slate-500">
+          <LoaderCircle size={17} className="animate-spin" /> Loading flyers...
+        </div>
+      ) : filteredFlyers.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+          <Sparkles size={25} className="mx-auto text-indigo-500" />
+          <h2 className="mt-3 font-bold text-slate-900">No flyers in this view</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Create a custom flyer or save all three photos in Business Profile
+            to start an automatic campaign.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredFlyers.map((flyer) => {
-            const isPublished = flyer.status === 'PUBLISHED';
-            return (
-              <div
-                key={flyer.id}
-                className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Flyer Image with Coupon Badge */}
-                  <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
-                    <img
-                      src={flyer.imageUrl}
-                      alt={flyer.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-
-                    {/* Status Pill */}
-                    <div className="absolute top-3 left-3">
-                      <span
-                        className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full backdrop-blur-md uppercase tracking-wider ${
-                          isPublished
-                            ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-indigo-950/80 text-indigo-300 border border-indigo-500/30'
-                        }`}
-                      >
-                        {flyer.status}
-                      </span>
-                    </div>
-
-                    {/* Quick Lightbox Preview Button */}
-                    <button
-                      onClick={() => setSelectedFlyerForModal(flyer)}
-                      className="absolute top-3 right-3 p-2 rounded-xl bg-white/90 hover:bg-white text-slate-700 shadow-md backdrop-blur-xs transition-colors"
-                      title="Preview Social Mockup"
-                    >
-                      <Eye size={15} />
-                    </button>
-
-                    {/* Attached Coupon Badge */}
-                    {flyer.couponCode && (
-                      <div className="absolute bottom-3 left-3 right-3 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-xs font-bold flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <Ticket size={12} className="text-amber-400" />
-                          Code: {flyer.couponCode}
-                        </span>
-                        <span className="text-[10px] text-amber-400">96h Deal</span>
-                      </div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredFlyers.map((flyer) => (
+            <article
+              key={flyer.id}
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="relative flex aspect-[4/3] items-center justify-center bg-slate-100">
+                {flyer.imageUrl ? (
+                  <img
+                    src={flyer.imageUrl}
+                    alt={flyer.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-sm text-slate-500">
+                    {flyer.status === "FAILED" ? (
+                      <CircleAlert size={24} className="text-rose-500" />
+                    ) : (
+                      <LoaderCircle size={24} className="animate-spin text-indigo-600" />
                     )}
+                    {flyer.status === "FAILED"
+                      ? "Generation failed"
+                      : "xAI is generating your flyer"}
                   </div>
-
-                  {/* Body Content */}
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-bold text-sm text-slate-900 line-clamp-1">{flyer.title}</h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {flyer.versions?.[flyer.selectedVersionId ? flyer.versions.findIndex((v) => v.id === flyer.selectedVersionId) : 0]?.caption || flyer.title}
-                    </p>
-
-                    {/* Meta Stats or Schedule info */}
-                    {isPublished && flyer.stats ? (
-                      <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center">
-                        <div className="p-1.5 rounded-lg bg-slate-50">
-                          <div className="text-[10px] text-slate-400">Reach</div>
-                          <div className="text-xs font-bold text-slate-800 font-mono">
-                            {flyer.stats.reach.toLocaleString('en-IN')}
-                          </div>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-slate-50">
-                          <div className="text-[10px] text-slate-400">Likes</div>
-                          <div className="text-xs font-bold text-rose-600 font-mono">{flyer.stats.likes}</div>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-slate-50">
-                          <div className="text-[10px] text-slate-400">Coupons</div>
-                          <div className="text-xs font-bold text-emerald-600 font-mono">
-                            {flyer.stats.couponsRedeemed}
-                          </div>
-                        </div>
-                      </div>
-                    ) : flyer.scheduledAt ? (
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                        <span className="flex items-center gap-1.5 text-indigo-600 font-bold">
-                          <Clock size={13} /> Auto-Publishes in 48h
-                        </span>
-                        <span className="text-slate-400 text-[11px]">
-                          {new Date(flyer.scheduledAt).toLocaleDateString('en-IN', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Card Footer Actions */}
-                <div className="p-4 pt-0 border-t border-slate-50 flex items-center justify-between gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedFlyerForModal(flyer)}
-                    className="w-full text-xs font-bold rounded-xl border-slate-200 text-slate-700"
-                  >
-                    <Eye size={13} className="mr-1.5" /> Preview
-                  </Button>
-
-                  {!isPublished && (
-                    <Button
-                      onClick={() => publishFlyerNow(flyer.id)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
-                    >
-                      <Send size={13} className="mr-1.5" /> Publish Now
-                    </Button>
-                  )}
-                </div>
+                )}
+                <span className="absolute left-3 top-3 rounded-full bg-slate-950/80 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white">
+                  {flyer.status}
+                </span>
+                {flyer.couponDiscountPercent && (
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-amber-300 px-2.5 py-1 text-xs font-black text-slate-950">
+                    {flyer.couponDiscountPercent}% OFF · one claim
+                  </span>
+                )}
               </div>
-            );
-          })}
+
+              <div className="space-y-3 p-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-600">
+                    {flyer.kind === "AUTOMATIC" ? "Automatic trend flyer" : "Custom flyer"}
+                  </p>
+                  <h2 className="mt-1 font-bold text-slate-900">{flyer.title}</h2>
+                  <p className="mt-1 line-clamp-3 text-sm text-slate-600">
+                    {flyer.caption || flyer.topic}
+                  </p>
+                </div>
+
+                {flyer.status === "GENERATING" || flyer.status === "QUEUED" ? (
+                  <p className="flex items-center gap-2 rounded-xl bg-indigo-50 p-3 text-xs font-medium text-indigo-800">
+                    <LoaderCircle size={14} className="animate-spin" />
+                    Flyer is being generated and will appear here when ready.
+                  </p>
+                ) : null}
+
+                {flyer.scheduledAt && (
+                  <p className="flex items-start gap-2 text-xs text-slate-600">
+                    <CalendarClock size={15} className="mt-0.5 shrink-0 text-indigo-600" />
+                    {flyer.status === "PUBLISHED" ? "Published" : "Scheduled"}{" "}
+                    {new Date(flyer.scheduledAt).toLocaleString("en-IN")}
+                  </p>
+                )}
+
+                {flyer.errorMessage && (
+                  <p className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800">
+                    {flyer.errorMessage}
+                  </p>
+                )}
+
+                {(flyer.status === "READY" || flyer.status === "SCHEDULED") &&
+                  flyer.imageUrl && (
+                  <div className="space-y-2 border-t border-slate-100 pt-3">
+                    {flyer.kind === "CUSTOM" && (
+                      <Button
+                        type="button"
+                        disabled={busyFlyerId === flyer.id}
+                        onClick={() => void handlePublishNow(flyer)}
+                        className="w-full rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+                      >
+                        <Send size={14} className="mr-1.5" />
+                        Post now
+                      </Button>
+                    )}
+                    <div className="flex gap-2">
+                      <label className="sr-only" htmlFor={`schedule-${flyer.id}`}>
+                        Select posting date and time
+                      </label>
+                      <input
+                        id={`schedule-${flyer.id}`}
+                        type="datetime-local"
+                        min={localDateTime(new Date().toISOString())}
+                        value={scheduleTimes[flyer.id] || ""}
+                        onChange={(event) =>
+                          setScheduleTimes((current) => ({
+                            ...current,
+                            [flyer.id]: event.target.value,
+                          }))
+                        }
+                        className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 px-2 text-xs"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={busyFlyerId === flyer.id}
+                        onClick={() => void handleSchedule(flyer)}
+                        className="rounded-xl"
+                      >
+                        <Clock3 size={14} className="mr-1" />
+                        {flyer.status === "SCHEDULED" ? "Change time" : "Schedule"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       )}
-
-      {/* ── Social Lightbox Modal ───────────────────────────────────────────── */}
-      <FlyerLightboxModal
-        flyer={selectedFlyerForModal}
-        isOpen={!!selectedFlyerForModal}
-        onClose={() => setSelectedFlyerForModal(null)}
-        onPublishNow={(id) => publishFlyerNow(id)}
-      />
     </div>
   );
 };

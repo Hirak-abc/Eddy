@@ -10,15 +10,18 @@ COPY package.json package-lock.json ./
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 RUN npm ci --include=dev
+RUN apk add --no-cache fontconfig ttf-dejavu
 
-# Copy server source only (.dockerignore keeps .env / node_modules / dist out)
+# Copy source without host secrets, dependencies, or build output.
 COPY server ./server
+# Social repositories use the generated Convex API at runtime.
+COPY convex/_generated ./convex/_generated
 
 WORKDIR /app/server
 
 ENV NODE_ENV=development
-ENV PORT=5001
+ENV PORT=5000
 
-EXPOSE 5001
+EXPOSE 5000
 
 CMD ["npm", "run", "dev"]

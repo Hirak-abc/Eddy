@@ -354,7 +354,7 @@ export const OnboardingPage = () => {
                       Automatic 48-Hour AI Trend Publishing
                     </span>
                     <p className="text-xs text-slate-600">
-                      Eddy scans local Lucknow trends and queues ready flyers with a 48h review window.
+                      Eddy uses your uploaded photos to create an automatic trend flyer and schedules it 72 hours after generation.
                     </p>
                   </div>
                 </div>

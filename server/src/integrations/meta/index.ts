@@ -6,6 +6,7 @@ export {
 } from './meta.client';
 export {
   isMetaConfigured,
+  isMetaPublishingConfigured,
   createOAuthState,
   parseOAuthState,
   buildAuthorizationUrl,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,6 +21,8 @@ import { useOwner } from '@/context/OwnerContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { businessService, notifyBusinessProfileUpdated } from '@/services/business.service';
+import { api } from '@/services/api';
+import type { BusinessImages, StoredImage } from '@/types';
 
 const businessProfileSchema = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters'),
@@ -32,10 +34,19 @@ const businessProfileSchema = z.object({
 });
 
 type BusinessProfileFormData = z.infer<typeof businessProfileSchema>;
+type ImageSlot = keyof BusinessImages;
+
+const imageSlots: ImageSlot[] = ['shop', 'product', 'item'];
 
 export const BusinessProfilePage = () => {
   const { business, updateBusiness, updateBusinessImages } = useOwner();
   const [activeTab, setActiveTab] = useState<'details' | 'images' | 'hours'>('details');
+  const [storedImages, setStoredImages] = useState<BusinessImages>({});
+  const [selectedFiles, setSelectedFiles] = useState<Partial<Record<ImageSlot, File>>>({});
+  const [isSavingImages, setIsSavingImages] = useState(false);
+  const [flyerLanguage, setFlyerLanguage] = useState<
+    'HINDI' | 'ENGLISH' | 'HINGLISH'
+  >('HINGLISH');
 
   const [images, setImages] = useState({
     shop: business.images?.shop?.url || 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80',
@@ -45,6 +56,38 @@ export const BusinessProfilePage = () => {
 
   const [hours, setHours] = useState({ openTime: '10:00 AM', closeTime: '11:00 PM', workingDays: 'Monday - Sunday' });
   const [previewMenu, setPreviewMenu] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadStoredImages = async () => {
+      const response = await api.get<{ images: Array<StoredImage & { slot: ImageSlot }> }>(
+        '/business-profile/images',
+      );
+      if (!response.success || !response.data) {
+        toast.error(response.error?.message || 'Could not load saved business photos.');
+        return;
+      }
+
+      const saved: BusinessImages = {};
+      for (const image of response.data.images) {
+        saved[image.slot] = image;
+      }
+      if (active) {
+        setStoredImages(saved);
+        setImages((current) => ({
+          shop: saved.shop?.url || current.shop,
+          product: saved.product?.url || current.product,
+          item: saved.item?.url || current.item,
+        }));
+        updateBusinessImages(saved);
+      }
+    };
+
+    void loadStoredImages();
+    return () => {
+      active = false;
+    };
+  }, [business.id, updateBusinessImages]);
 
   const {
     register,
@@ -87,22 +130,113 @@ export const BusinessProfilePage = () => {
     toast.success('Business profile saved and added to customer shop selection.');
   };
 
-  const handleSaveImages = () => {
-    updateBusinessImages({
-      shop: { storageKey: 'shop_front_img', url: images.shop, uploadedAt: new Date().toISOString() },
-      product: { storageKey: 'hero_product_img', url: images.product, uploadedAt: new Date().toISOString() },
-      item: { storageKey: 'detail_item_img', url: images.item, uploadedAt: new Date().toISOString() },
-    });
-    toast.success('Business images updated for AI flyers and customer QR shop.');
+  const handleSaveImages = async () => {
+    setIsSavingImages(true);
+    const updates: BusinessImages = {};
+    const nextStoredImages = { ...storedImages };
+    let uploadedNewImage = false;
+
+    try {
+      for (const slot of imageSlots) {
+        const file = selectedFiles[slot];
+        if (file) {
+          const response = await api.upload<{
+            image: StoredImage & { slot: ImageSlot };
+          }>(`/business-profile/images/${slot}`, file);
+          if (!response.success || !response.data) {
+            throw new Error(response.error?.message || `Could not save the ${slot} photo.`);
+          }
+          const image = response.data.image;
+          updates[slot] = image;
+          nextStoredImages[slot] = image;
+          uploadedNewImage = true;
+          setImages((current) => ({ ...current, [slot]: image.url }));
+          setSelectedFiles((current) => {
+            const next = { ...current };
+            delete next[slot];
+            return next;
+          });
+          continue;
+        }
+
+        const currentStoredImage = storedImages[slot];
+        if (currentStoredImage && currentStoredImage.url !== images[slot]) {
+          const response = await api.delete(`/business-profile/images/${slot}`);
+          if (!response.success) {
+            throw new Error(response.error?.message || `Could not update the ${slot} photo.`);
+          }
+          delete nextStoredImages[slot];
+          updates[slot] = {
+            storageKey: 'external-url',
+            url: images[slot],
+            uploadedAt: new Date().toISOString(),
+          };
+        } else if (!currentStoredImage && business.images?.[slot]?.url !== images[slot]) {
+          updates[slot] = {
+            storageKey: 'external-url',
+            url: images[slot],
+            uploadedAt: new Date().toISOString(),
+          };
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateBusinessImages(updates);
+      }
+      setStoredImages(nextStoredImages);
+      toast.success('Business images updated for AI flyers and customer QR shop.');
+
+      if (uploadedNewImage) {
+        const allImagesSaved = imageSlots.every(
+          (slot) => Boolean(nextStoredImages[slot]?.url),
+        );
+        if (allImagesSaved) {
+          const flyerResponse = await api.post<{ flyer: { id: string } }>(
+            '/flyers/automatic',
+            {
+              businessName: business.name,
+              businessCategory: business.category,
+              businessLocation: business.location,
+              language: flyerLanguage,
+            },
+          );
+          if (flyerResponse.success) {
+            toast.success(
+              'Automatic flyer queued. Only one flyer can be generated every 72 hours. Track generation in Flyer Studio; it will publish to Facebook and Instagram 72 hours after generation unless you change its schedule.',
+            );
+          } else {
+            toast.error(
+              flyerResponse.error?.message ||
+                'Photos saved, but the automatic flyer could not be queued.',
+            );
+          }
+        } else {
+          toast.info('Add all three photos to generate your automatic flyer.');
+        }
+      }
+    } catch (error) {
+      if (Object.keys(updates).length > 0) {
+        updateBusinessImages(updates);
+      }
+      setStoredImages(nextStoredImages);
+      toast.error(error instanceof Error ? error.message : 'Could not save business photos.');
+    } finally {
+      setIsSavingImages(false);
+    }
   };
 
-  const handleImageFileChange = (type: 'shop' | 'product' | 'item', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = (type: ImageSlot, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImages((prev) => ({ ...prev, [type]: url }));
-      toast.info(`Previewing new ${type === 'shop' ? 'Shop Front' : type === 'product' ? 'Hero Product' : 'Signature Item'} photo. Save to apply.`);
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+      toast.error('Choose a JPEG, PNG, or WebP image up to 10 MB.');
+      e.target.value = '';
+      return;
     }
+    const url = URL.createObjectURL(file);
+    setImages((prev) => ({ ...prev, [type]: url }));
+    setSelectedFiles((prev) => ({ ...prev, [type]: file }));
+    toast.info(`Previewing new ${type === 'shop' ? 'Shop Front' : type === 'product' ? 'Hero Product' : 'Signature Item'} photo. Save to apply.`);
   };
 
   const handleResetImages = () => {
@@ -111,6 +245,7 @@ export const BusinessProfilePage = () => {
       product: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&auto=format&fit=crop&q=80',
       item: 'https://images.unsplash.com/photo-1561047029-3000c68339ca?w=800&auto=format&fit=crop&q=80',
     });
+    setSelectedFiles({});
     toast.info('Photo suite reset to starter images. Save to apply.');
   };
 
@@ -238,6 +373,28 @@ export const BusinessProfilePage = () => {
                   <RotateCcw size={13} /> Reset to Starter
                 </button>
               </div>
+              <div className="max-w-sm space-y-1">
+                <label
+                  htmlFor="automatic-flyer-language"
+                  className="block text-xs font-bold uppercase tracking-wider text-slate-700"
+                >
+                  Automatic flyer language
+                </label>
+                <select
+                  id="automatic-flyer-language"
+                  value={flyerLanguage}
+                  onChange={(event) =>
+                    setFlyerLanguage(
+                      event.target.value as 'HINDI' | 'ENGLISH' | 'HINGLISH',
+                    )
+                  }
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800"
+                >
+                  <option value="HINDI">Hindi</option>
+                  <option value="ENGLISH">English</option>
+                  <option value="HINGLISH">Hinglish</option>
+                </select>
+              </div>
 
               <div className="space-y-5">
                 {([
@@ -260,12 +417,20 @@ export const BusinessProfilePage = () => {
                         <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">
                           <Upload size={13} />
                           <span>Upload New</span>
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageFileChange(slot.key, e)} />
+                          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => handleImageFileChange(slot.key, e)} />
                         </label>
                         <input
                           type="text"
                           value={images[slot.key]}
-                          onChange={(e) => setImages((prev) => ({ ...prev, [slot.key]: e.target.value }))}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            setImages((prev) => ({ ...prev, [slot.key]: url }));
+                            setSelectedFiles((prev) => {
+                              const next = { ...prev };
+                              delete next[slot.key];
+                              return next;
+                            });
+                          }}
                           className="h-8 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 font-mono text-xs text-slate-600"
                           placeholder="Or paste image URL"
                         />
@@ -276,8 +441,8 @@ export const BusinessProfilePage = () => {
               </div>
 
               <div className="flex justify-end border-t border-slate-100 pt-3">
-                <Button type="button" onClick={handleSaveImages} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700">
-                  <Save size={15} /> Save Photo Suite
+                <Button type="button" onClick={handleSaveImages} disabled={isSavingImages} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700">
+                  <Save size={15} /> {isSavingImages ? 'Saving Photos...' : 'Save Photo Suite'}
                 </Button>
               </div>
             </div>

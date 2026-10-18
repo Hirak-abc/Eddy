@@ -62,6 +62,7 @@ export interface SocialPostResult {
 export interface SocialPostRecord {
   id: string;
   clerkUserId: string;
+  flyerId?: string;
   accountIds: string[];
   imageUrl: string;
   caption?: string;

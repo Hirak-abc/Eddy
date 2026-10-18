@@ -16,12 +16,13 @@ services:
       context: .
       dockerfile: server/Dockerfile
     ports:
-      - "5001:5001"
+      - "5000:5000"
     env_file:
       - ./server/.env
+      - ./server/.env.meta.local
     environment:
       - NODE_ENV=development
-      - PORT=5001
+      - PORT=5000
       - CLIENT_URL=http://localhost:5173
     volumes:
       # Live reload source without overwriting container node_modules
@@ -41,9 +42,9 @@ services:
       # Browser calls the server directly (bypasses Vite proxy, which points
       # at localhost and would fail from inside the container).
       # Server uses open cors() in server/src/app.ts, so this works.
-      - VITE_API_URL=http://localhost:5001/api
+      - VITE_API_URL=http://localhost:5000/api
       # Map only Clerk's public publishable key; keep server secrets server-side.
-      - VITE_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-${CLERK_PUBLISHABLE_KEY:-}}}
       - VITE_GA_MEASUREMENT_ID=${VITE_GA_MEASUREMENT_ID:-}
     volumes:
       - ./client/src:/app/client/src
