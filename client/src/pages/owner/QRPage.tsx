@@ -105,7 +105,7 @@ export const QRPage = () => {
       toast.error(response.error?.message ?? 'Could not save shop details.');
     } else {
       setBusiness(response.data);
-      toast.success('Shop profile saved. An administrator must verify it before its QR becomes active.');
+      toast.success('Shop profile and permanent QR saved.');
       await loadData();
     }
     setSaving(false);

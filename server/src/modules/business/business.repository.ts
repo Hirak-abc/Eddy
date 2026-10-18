@@ -14,7 +14,7 @@ const createOwnedBusiness = makeFunctionReference<
     qrToken: string;
     timestamp: string;
   },
-  { businessId: string }
+  Business
 >('businesses:createOwnedBusiness');
 const disableOwnedQr = makeFunctionReference<
   'mutation',
