@@ -16,6 +16,16 @@ const createOwnedBusiness = makeFunctionReference<
   },
   Business
 >('businesses:createOwnedBusiness');
+const updateOwnedBusiness = makeFunctionReference<
+  'mutation',
+  {
+    name: string;
+    category: string;
+    address: string;
+    timestamp: string;
+  },
+  Business
+>('businesses:updateOwnedBusiness');
 const disableOwnedQr = makeFunctionReference<
   'mutation',
   { timestamp: string },
@@ -63,6 +73,15 @@ export const BUSINESS_REPOSITORY = {
     qrToken: string;
   }, token: string) =>
     createAuthenticatedConvexClient(token).mutation(createOwnedBusiness, {
+      ...args,
+      timestamp: new Date().toISOString(),
+    }),
+  updateOwnedBusiness: (args: {
+    name: string;
+    category: string;
+    address: string;
+  }, token: string) =>
+    createAuthenticatedConvexClient(token).mutation(updateOwnedBusiness, {
       ...args,
       timestamp: new Date().toISOString(),
     }),

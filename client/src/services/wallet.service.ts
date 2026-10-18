@@ -16,6 +16,20 @@ export interface CustomerWallet {
   transactions: WalletTransaction[];
 }
 
+export interface OwnerWallet {
+  balancePaise: number;
+  lifetimeCreditsPaise: number;
+  approvedRedemptionsCount: number;
+  transactions: Array<{
+    _id: string;
+    redemptionId: string;
+    reference: string;
+    amountPaise: number;
+    type: string;
+    createdAt: string;
+  }>;
+}
+
 export const WALLET_UPDATED_EVENT = 'eddy-wallet-updated';
 
 export const notifyWalletUpdated = () => {
@@ -24,4 +38,5 @@ export const notifyWalletUpdated = () => {
 
 export const walletService = {
   getCustomerWallet: async () => api.get<CustomerWallet>('/wallet'),
+  getOwnerWallet: async () => api.get<OwnerWallet>('/wallet/owner'),
 };

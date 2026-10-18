@@ -18,6 +18,9 @@ export const BUSINESS_SERVICE = {
     return BUSINESS_REPOSITORY.createOwnedBusiness({ ...input, qrToken }, token);
   },
 
+  updateOwnedBusiness: (input: { name: string; category: string; address: string }, token: string) =>
+    BUSINESS_REPOSITORY.updateOwnedBusiness(input, token),
+
   activateLegacyOwnedQr: (token: string) =>
     BUSINESS_REPOSITORY.activateLegacyOwnedQr(token),
   disableOwnedQr: (token: string) => BUSINESS_REPOSITORY.disableOwnedQr(token),

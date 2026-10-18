@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/me', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.getOwnedBusiness);
 router.post('/me', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.createOwnedBusiness);
+router.patch('/me', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.updateOwnedBusiness);
 router.post('/me/qr/activate-legacy', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.activateLegacyOwnedQr);
 router.post('/me/qr/disable', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.disableOwnedQr);
 router.get('/me/offers', authenticate, authorize(['OWNER']), BUSINESS_CONTROLLER.listOwnedOffers);

@@ -11,11 +11,16 @@ const respondError = (error: unknown, res: Response, next: NextFunction) => {
       'REDEMPTION_ALREADY_REVIEWED',
       'REDEMPTION_CANNOT_BE_CANCELLED',
       'REDEMPTION_NOT_FOUND',
+      'BUSINESS_NOT_FOUND',
+      'IDEMPOTENCY_KEY_REUSED',
       'FORBIDDEN',
     ];
     const code = codes.find((candidate) => error.message.includes(candidate));
     if (code) {
-      const status = code === 'FORBIDDEN' ? 403 : code === 'INSUFFICIENT_COINS' ? 409 : 400;
+      const status = code === 'FORBIDDEN' ? 403
+        : code === 'INSUFFICIENT_COINS' || code === 'IDEMPOTENCY_KEY_REUSED' ? 409
+        : code === 'BUSINESS_NOT_FOUND' ? 404
+        : 400;
       return res.status(status).json({
         success: false,
         data: null,
@@ -31,7 +36,8 @@ export const REDEMPTIONS_CONTROLLER = {
     try {
       const input = requestRedemptionSchema.parse(req.body);
       const result = await REDEMPTIONS_REPOSITORY.request(
-        input.offerId,
+        input.businessId,
+        input.coinsCost,
         input.idempotencyKey,
         req.authToken!,
       );

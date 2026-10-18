@@ -6,7 +6,7 @@ export interface Redemption {
   customerId: string;
   businessId: string;
   ownerId: string;
-  offerId: string;
+  offerId?: string;
   offerName: string;
   coinsCost: number;
   settlementValuePaise: number;
@@ -17,9 +17,10 @@ export interface Redemption {
 }
 
 export const redemptionService = {
-  request: (offerId: string, idempotencyKey: string) =>
+  request: (businessId: string, coinsCost: number, idempotencyKey: string) =>
     api.post<{ redemptionId: string; reference: string; status: Redemption['status'] }>('/redemptions', {
-      offerId,
+      businessId,
+      coinsCost,
       idempotencyKey,
     }),
   cancel: (redemptionId: string) =>

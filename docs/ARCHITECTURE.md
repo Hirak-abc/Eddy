@@ -552,17 +552,19 @@ Customer Wallet
         │
         └── Coins
 
-Owner Receivables
+Owner Eddy Wallet
         │
-        └── Fixed settlement values in paise
+        └── Internal rupee balance and credit ledger in paise
 ```
 
 Customer rules:
 
 ```text
 Minimum redemption = 50 coins
+Maximum redemption per request = 100 coins and cannot exceed available balance
 Maximum wallet capacity = 100 available + reserved Coins
-Offer settlement value = fixed by the owner when the offer is created
+Conversion = 1 Coin = ₹1
+Owner approval credits the internal wallet; bank payout is separate
 ```
 
 ---
@@ -577,24 +579,22 @@ sequenceDiagram
     participant DB as Convex
     participant O as Owner
 
-    C->>API: Request coin redemption
-    API->>DB: Reserve customer Coins
+    C->>API: Choose a shop and Coins (minimum 50)
+    API->>DB: Validate available balance; reserve selected Coins
     API-->>O: Show pending request in owner dashboard
 
     O->>API: Approve / Reject
 
     alt Approved
-        API->>DB: Move reserved Coins to spent and create receivable
-        Note over DB: Receivable is eligible after 14 days
-        O->>API: Request eligible settlement batch
-        API->>DB: Allocate eligible receivables
-        Note over API,DB: An administrator records PAID or FAILED manually; no money is transferred
+        API->>DB: Move reserved Coins to spent
+        API->>DB: Credit owner internal wallet at 1 Coin = ₹1
+        Note over DB: Wallet credit is not a bank transfer
     else Rejected
         API->>DB: Release reserved Coins
     end
 ```
 
-Owners can submit eligible receivables as a settlement batch. An administrator records
+Legacy owner receivables can still be submitted as a settlement batch. An administrator records
 the outcome through `POST /api/settlements/batches/:batchId/outcome`; recording `PAID`
 requires a payment reference. This records the operator's assertion only and does not
 initiate a bank transfer or payment-provider transaction.

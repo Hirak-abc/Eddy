@@ -5,8 +5,9 @@ import { requireUser } from './auth';
 import type { Id } from './_generated/dataModel';
 
 const MIN_REDEMPTION_COINS = 50;
+const MAX_REDEMPTION_COINS = 100;
 const REQUEST_EXPIRY_MS = 24 * 60 * 60 * 1000;
-const SETTLEMENT_DELAY_MS = 14 * 24 * 60 * 60 * 1000;
+const COIN_VALUE_PAISE = 100;
 
 const releaseReservation = async (
   ctx: MutationCtx,
@@ -48,7 +49,8 @@ const releaseReservation = async (
 
 export const requestRedemption = mutation({
   args: {
-    offerId: v.id('redeemableOffers'),
+    businessId: v.id('businesses'),
+    coinsCost: v.number(),
     idempotencyKey: v.string(),
   },
   handler: async (ctx, args) => {
@@ -60,18 +62,21 @@ export const requestRedemption = mutation({
       )
       .unique();
     if (existing) {
+      if (existing.businessId !== String(args.businessId) || existing.coinsCost !== args.coinsCost) {
+        throw new Error('IDEMPOTENCY_KEY_REUSED');
+      }
       return { redemptionId: existing._id, reference: existing.reference, status: existing.status };
     }
 
-    const offer = await ctx.db.get(args.offerId);
-    if (!offer || !offer.active) {
-      throw new Error('REWARD_NOT_AVAILABLE');
-    }
-    if (!Number.isInteger(offer.coinsCost) || offer.coinsCost < MIN_REDEMPTION_COINS) {
+    if (
+      !Number.isInteger(args.coinsCost) ||
+      args.coinsCost < MIN_REDEMPTION_COINS ||
+      args.coinsCost > MAX_REDEMPTION_COINS
+    ) {
       throw new Error('INVALID_REDEMPTION_COST');
     }
 
-    const business = await ctx.db.get(offer.businessId as Id<'businesses'>);
+    const business = await ctx.db.get(args.businessId);
     if (!business || !business.qrEnabled) {
       throw new Error('BUSINESS_NOT_FOUND');
     }
@@ -79,7 +84,7 @@ export const requestRedemption = mutation({
       .query('wallets')
       .withIndex('by_customer', (q) => q.eq('customerId', customer.id))
       .unique();
-    if (!wallet || wallet.balance < offer.coinsCost) {
+    if (!wallet || wallet.balance < args.coinsCost) {
       throw new Error('INSUFFICIENT_COINS');
     }
 
@@ -90,27 +95,26 @@ export const requestRedemption = mutation({
       reference,
       customerId: customer.id,
       idempotencyKey: args.idempotencyKey,
-      businessId: offer.businessId,
-      ownerId: offer.ownerId,
-      offerId: String(offer._id),
-      offerName: offer.name,
-      coinsCost: offer.coinsCost,
-      settlementValuePaise: offer.settlementValuePaise,
+      businessId: String(business._id),
+      ownerId: business.ownerId,
+      offerName: 'Coin redemption',
+      coinsCost: args.coinsCost,
+      settlementValuePaise: args.coinsCost * COIN_VALUE_PAISE,
       status: 'REQUESTED',
       requestedAt: timestamp,
       expiresAt: new Date(now + REQUEST_EXPIRY_MS).toISOString(),
     });
 
     await ctx.db.patch(wallet._id, {
-      balance: wallet.balance - offer.coinsCost,
-      reservedBalance: (wallet.reservedBalance ?? 0) + offer.coinsCost,
+      balance: wallet.balance - args.coinsCost,
+      reservedBalance: (wallet.reservedBalance ?? 0) + args.coinsCost,
       updatedAt: timestamp,
     });
     await ctx.db.insert('walletTransactions', {
       customerId: customer.id,
-      businessId: offer.businessId,
+      businessId: String(business._id),
       type: 'REDEMPTION_RESERVED',
-      amount: -offer.coinsCost,
+      amount: -args.coinsCost,
       redemptionId: String(redemptionId),
       idempotencyKey: args.idempotencyKey,
       createdAt: timestamp,
@@ -131,9 +135,19 @@ export const reviewRedemption = mutation({
     if (!redemption) {
       throw new Error('REDEMPTION_NOT_FOUND');
     }
-    if (redemption.ownerId !== owner.id && owner.role !== 'ADMIN') {
+    const ownedBusinesses = owner.role === 'ADMIN'
+      ? []
+      : await ctx.db
+        .query('businesses')
+        .withIndex('by_owner', (q) => q.eq('ownerId', owner.id))
+        .collect();
+    if (
+      owner.role !== 'ADMIN' &&
+      !ownedBusinesses.some((business) => String(business._id) === redemption.businessId)
+    ) {
       throw new Error('FORBIDDEN');
     }
+    const settlementOwnerId = owner.role === 'ADMIN' ? redemption.ownerId : owner.id;
     if (redemption.status !== 'REQUESTED') {
       throw new Error('REDEMPTION_ALREADY_REVIEWED');
     }
@@ -165,6 +179,7 @@ export const reviewRedemption = mutation({
     await ctx.db.patch(redemption._id, {
       status: 'APPROVED',
       reviewedAt: timestamp,
+      ownerId: settlementOwnerId,
     });
     await ctx.db.insert('walletTransactions', {
       customerId: redemption.customerId,
@@ -174,17 +189,31 @@ export const reviewRedemption = mutation({
       redemptionId: String(redemption._id),
       createdAt: timestamp,
     });
-    await ctx.db.insert('ownerReceivables', {
+    const ownerWallet = await ctx.db
+      .query('ownerWallets')
+      .withIndex('by_owner', (q) => q.eq('ownerId', settlementOwnerId))
+      .unique();
+    if (ownerWallet) {
+      await ctx.db.patch(ownerWallet._id, {
+        balancePaise: ownerWallet.balancePaise + redemption.settlementValuePaise,
+        lifetimeCreditsPaise: ownerWallet.lifetimeCreditsPaise + redemption.settlementValuePaise,
+        updatedAt: timestamp,
+      });
+    } else {
+      await ctx.db.insert('ownerWallets', {
+        ownerId: settlementOwnerId,
+        balancePaise: redemption.settlementValuePaise,
+        lifetimeCreditsPaise: redemption.settlementValuePaise,
+        updatedAt: timestamp,
+      });
+    }
+    await ctx.db.insert('ownerWalletTransactions', {
+      ownerId: settlementOwnerId,
       redemptionId: String(redemption._id),
       reference: redemption.reference,
-      ownerId: redemption.ownerId,
-      businessId: redemption.businessId,
-      customerId: redemption.customerId,
       amountPaise: redemption.settlementValuePaise,
-      eligibleAt: new Date(Date.parse(timestamp) + SETTLEMENT_DELAY_MS).toISOString(),
-      status: 'PENDING',
+      type: 'COIN_REDEMPTION_CREDIT',
       createdAt: timestamp,
-      updatedAt: timestamp,
     });
 
     return { redemptionId: args.redemptionId, status: 'APPROVED' as const };
@@ -224,11 +253,32 @@ export const listOwnerRedemptions = query({
   args: {},
   handler: async (ctx) => {
     const owner = await requireUser(ctx, ['OWNER', 'ADMIN']);
-    return await ctx.db
-      .query('redemptions')
+    if (owner.role === 'ADMIN') {
+      return await ctx.db
+        .query('redemptions')
+        .withIndex('by_owner', (q) => q.eq('ownerId', owner.id))
+        .order('desc')
+        .take(100);
+    }
+
+    const businesses = await ctx.db
+      .query('businesses')
       .withIndex('by_owner', (q) => q.eq('ownerId', owner.id))
-      .order('desc')
-      .take(100);
+      .collect();
+    const redemptionsByBusiness = await Promise.all(
+      businesses.map((business) =>
+        ctx.db
+          .query('redemptions')
+          .withIndex('by_business', (q) => q.eq('businessId', String(business._id)))
+          .order('desc')
+          .take(100)
+      ),
+    );
+
+    return redemptionsByBusiness
+      .flat()
+      .sort((left, right) => Date.parse(right.requestedAt) - Date.parse(left.requestedAt))
+      .slice(0, 100);
   },
 });
 
