@@ -693,6 +693,10 @@ https://eddy.app/customer/scan?qrToken={opaqueToken}
 
 New shop QRs are enabled immediately and can resolve or accept scans after creation.
 Owners can disable a QR from the shop QR page.
+Convex persists the shop's opaque QR token; the PNG/SVG is regenerated from that token
+and the current app origin. Deployments must point the Express API at the intended Convex
+deployment, and QR codes printed before deployment must be regenerated on the deployed
+app origin.
 
 ---
 

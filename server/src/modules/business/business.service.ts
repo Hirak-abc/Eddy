@@ -15,12 +15,7 @@ export const BUSINESS_SERVICE = {
       });
     }
     const qrToken = randomBytes(32).toString('base64url');
-    await BUSINESS_REPOSITORY.createOwnedBusiness({ ...input, qrToken }, token);
-    const business = await BUSINESS_REPOSITORY.getOwnedBusiness(token);
-    if (!business) {
-      throw new Error('Shop profile was created but could not be loaded.');
-    }
-    return business;
+    return BUSINESS_REPOSITORY.createOwnedBusiness({ ...input, qrToken }, token);
   },
 
   activateLegacyOwnedQr: (token: string) =>

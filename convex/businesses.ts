@@ -37,7 +37,11 @@ export const createOwnedBusiness = mutation({
       updatedAt: args.timestamp,
     });
 
-    return { businessId };
+    const business = await ctx.db.get(businessId);
+    if (!business) {
+      throw new Error('BUSINESS_CREATE_FAILED');
+    }
+    return business;
   },
 });
 
