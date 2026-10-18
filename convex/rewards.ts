@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireUser } from './auth';
-import { shuffleRewardPool } from './rewardPool';
+import { isCurrentRewardPool, shuffleRewardPool } from './rewardPool';
 import type { Id } from './_generated/dataModel';
 
 const MAX_CUSTOMER_BALANCE_COINS = 100;
@@ -51,7 +51,11 @@ export const recordSpin = mutation({
     let rewardSlots = business.rewardSlots;
     let slotIndex = business.rewardSlotIndex;
 
-    if (slotIndex >= rewardSlots.length) {
+    if (!isCurrentRewardPool(rewardSlots)) {
+      cycleNumber += 1;
+      rewardSlots = shuffleRewardPool();
+      slotIndex = 0;
+    } else if (slotIndex >= rewardSlots.length) {
       cycleNumber += 1;
       rewardSlots = shuffleRewardPool();
       slotIndex = 0;

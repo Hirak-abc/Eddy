@@ -730,8 +730,9 @@ Else
    → Reject
 ```
 
-Reward cycles contain exactly 100 shuffled outcomes per shop: 40 × 2 Coins, 20 × 3,
-10 × 4, 10 × 5, and 20 × 10. A spin is tied to its scan and can only be credited once.
+Reward cycles contain exactly 100 shuffled coin outcomes per shop: 50 × 2 Coins, 30 × 3,
+10 × 4, 7 × 5, and 3 × 10. A spin is tied to its scan and can only be credited once.
+Legacy shop cycles are replaced with the current distribution on their next spin.
 The customer's wallet is capped at 100 available plus reserved Coins; any overflow
 is reported but not credited.
 
