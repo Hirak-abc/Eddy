@@ -1,10 +1,29 @@
+import https from 'https';
 import axios, { AxiosError } from 'axios';
 import { config } from '../../config/env';
 
+const insecureTls =
+  process.env.META_TLS_INSECURE === 'true' ||
+  (process.env.NODE_ENV || config.NODE_ENV || 'development') === 'development';
+
+const httpsAgent = insecureTls
+  ? new https.Agent({ rejectUnauthorized: false })
+  : undefined;
+
 const graphVersion = () => config.META_GRAPH_API_VERSION || 'v21.0';
+const instagramGraphVersion = () =>
+  config.META_IG_GRAPH_API_VERSION || 'v21.0';
+
+export type MetaGraphHost = 'facebook' | 'instagram';
 
 export const graphBaseUrl = () =>
   `https://graph.facebook.com/${graphVersion()}`;
+
+export const instagramGraphBaseUrl = () =>
+  `https://graph.instagram.com/${instagramGraphVersion()}`;
+
+const hostBaseUrl = (host: MetaGraphHost = 'facebook'): string =>
+  host === 'instagram' ? instagramGraphBaseUrl() : graphBaseUrl();
 
 export class MetaApiError extends Error {
   status?: number;
@@ -39,9 +58,11 @@ const toMetaError = (error: unknown): MetaApiError => {
 export const metaGet = async <T>(
   path: string,
   params: Record<string, string | undefined> = {},
+  host: MetaGraphHost = 'facebook',
 ): Promise<T> => {
   try {
-    const response = await axios.get<T>(`${graphBaseUrl()}${path}`, {
+    const response = await axios.get<T>(`${hostBaseUrl(host)}${path}`, {
+      httpsAgent,
       params: Object.fromEntries(
         Object.entries(params).filter(([, value]) => value !== undefined),
       ),
@@ -55,9 +76,11 @@ export const metaGet = async <T>(
 export const metaPost = async <T>(
   path: string,
   body: Record<string, string | undefined> = {},
+  host: MetaGraphHost = 'facebook',
 ): Promise<T> => {
   try {
-    const response = await axios.post<T>(`${graphBaseUrl()}${path}`, undefined, {
+    const response = await axios.post<T>(`${hostBaseUrl(host)}${path}`, undefined, {
+      httpsAgent,
       params: Object.fromEntries(
         Object.entries(body).filter(([, value]) => value !== undefined),
       ),

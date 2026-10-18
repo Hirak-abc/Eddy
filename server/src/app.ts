@@ -17,6 +17,14 @@ app.use(morgan('dev')); // HTTP request logger
 // API Routes
 app.use('/api', apiRoutes);
 
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    data: { status: 'ok', health: '/health', api: '/api' },
+    error: null,
+  });
+});
+
 // Base API route
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, data: { status: 'ok' }, error: null });

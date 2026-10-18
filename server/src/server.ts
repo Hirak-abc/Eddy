@@ -1,11 +1,14 @@
+import path from 'path';
 import { config } from 'dotenv';
-config(); // Load .env file
+
+config({ path: path.resolve(__dirname, '../../.env') });
+config({ path: path.resolve(process.cwd(), '.env') });
 
 import app from './app';
 import { config as envConfig } from './config/env';
 import { startPublishingJob } from './jobs/publishing.job';
 
-const PORT = envConfig.PORT || 5001;
+const PORT = envConfig.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

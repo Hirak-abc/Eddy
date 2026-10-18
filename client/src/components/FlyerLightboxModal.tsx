@@ -18,7 +18,7 @@ interface FlyerLightboxModalProps {
   flyer: ExtendedFlyer | null;
   isOpen: boolean;
   onClose: () => void;
-  onPublishNow?: (flyerId: string) => void;
+  onPublishNow?: (flyerId: string) => void | Promise<void>;
 }
 
 export const FlyerLightboxModal = ({
@@ -256,9 +256,13 @@ export const FlyerLightboxModal = ({
               </Button>
               {flyer.status !== 'PUBLISHED' && onPublishNow && (
                 <Button
-                  onClick={() => {
-                    onPublishNow(flyer.id);
-                    onClose();
+                  onClick={async () => {
+                    try {
+                      await onPublishNow(flyer.id);
+                      onClose();
+                    } catch {
+                      // Parent surfaces the error toast; keep the modal open.
+                    }
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm"
                 >

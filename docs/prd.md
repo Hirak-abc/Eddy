@@ -400,15 +400,11 @@ publishing route for supported platforms.
 
 #### \[P1\] Automatic publishing
 
-If enabled by the owner:
-
--   generated flyers remain available for 48 hours for owner selection;
--   if the owner does not select one within 48 hours, one flyer may be
-    selected automatically;
--   if automatic publishing is disabled, nothing is published
-    automatically.
-
-The owner can disable this setting.
+After all three business photos are saved, one photo is selected at random
+and an India-relevant, trend-inspired flyer is generated in the selected
+language. Once generation completes, the flyer is scheduled to publish to
+Facebook and Instagram after 72 hours. This automation requires active
+accounts on both platforms.
 
 ------------------------------------------------------------------------
 
@@ -727,7 +723,7 @@ the system can verify transactions, reduce fraud and support settlement.
   Owner wallet              No upper limit in proposed model
   Flyer coupon              One-time use
   Flyer coupon validity     96 hours
-  Auto-publish delay        48 hours if enabled
+  Auto-publish delay        72 hours after automatic flyer generation
   Coin redemption           Owner approval required
   Discount transaction      Customer confirms displayed price
   Streak milestone          +10 coins every 10 eligible days

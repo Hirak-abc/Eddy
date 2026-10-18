@@ -238,7 +238,7 @@ export const modalPop = {
 - Position: `bottom-right` for Desktop Dashboard, `top-center` for Customer Mobile Web.
 - Formats:
   - Success: Emerald pill with check icon (`Flyer published to Instagram!`)
-  - Warning/Alert: Amber pill with alert icon (`48-hour auto-publish window ending soon`)
+  - Warning/Alert: Amber pill with alert icon (`72-hour auto-publish window ending soon`)
   - Error: Rose pill (`Daily scan limit of 3 reached`)
 
 ---

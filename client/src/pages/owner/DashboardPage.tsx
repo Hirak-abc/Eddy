@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -6,10 +5,7 @@ import {
   Ticket,
   TrendingUp,
   Eye,
-  Clock,
-  Send,
   CheckCircle2,
-  Share2,
   Store,
   ChevronRight,
   Zap,
@@ -24,61 +20,19 @@ import { useOwner } from '@/context/OwnerContext';
 import { ROUTES } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 
-const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80';
-
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const {
     business,
-    trendFlyer,
     transactions,
     approveTransaction,
     rejectTransaction,
-    publishFlyerNow,
-    selectFlyerVersion,
     analyticsSummary,
     socialAccounts,
   } = useOwner();
 
-  // Countdown timer state for 48h Auto-Publish window
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
-    hours: 38,
-    minutes: 14,
-    seconds: 22,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const pendingTransactions = transactions.filter((t) => t.status === 'PENDING');
   const recentApproved = transactions.filter((t) => t.status === 'APPROVED').slice(0, 4);
-
-  const handlePublishInstant = (flyerId: string) => {
-    publishFlyerNow(flyerId);
-    toast.success('Flyer published successfully to Instagram and Facebook!');
-  };
-
-  const handleCopy = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
-    } catch {
-      toast.error('Copy failed in this browser');
-    }
-  };
-  const selectedVersion =
-    trendFlyer?.versions?.find((v) => v.id === trendFlyer.selectedVersionId) ||
-    trendFlyer?.versions?.[0];
 
   return (
     <div className="space-y-8 pb-12">
@@ -204,173 +158,27 @@ export const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── Active Campaign Showcase & 48h Countdown ──────────────────────── */}
-      {trendFlyer && (
-        <div className="bg-white rounded-3xl border border-indigo-100 shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-900 p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-amber-300 shrink-0">
-                <Sparkles size={20} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase font-bold tracking-wider text-indigo-200">
-                    Next Auto-Publish
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                </div>
-                <h2 className="text-lg font-bold text-white">{trendFlyer.title}</h2>
-              </div>
-            </div>
-
-            {/* Countdown Badge */}
-            <div className="flex items-center gap-2 bg-slate-950/40 backdrop-blur px-4 py-2 rounded-2xl border border-white/10 self-start sm:self-auto">
-              <Clock size={16} className="text-amber-400 shrink-0" />
-              <div className="flex items-center gap-1 text-sm font-mono font-bold tracking-wider text-white">
-                <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300">
-                  {String(timeLeft.hours).padStart(2, '0')}h
-                </span>
-                <span>:</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300">
-                  {String(timeLeft.minutes).padStart(2, '0')}m
-                </span>
-                <span>:</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded text-amber-300">
-                  {String(timeLeft.seconds).padStart(2, '0')}s
-                </span>
-              </div>
-            </div>
+      <section className="flex flex-col justify-between gap-4 rounded-3xl border border-indigo-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+            <Sparkles size={20} />
           </div>
-
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Image Preview */}
-            <div className="lg:col-span-4 flex flex-col items-center">
-              <div className="relative aspect-square w-full max-w-[280px] rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-100 group">
-                <img
-                  src={selectedVersion?.imageUrl || trendFlyer.imageUrl}
-                  alt={trendFlyer.title}
-                  onError={(e) => {
-                    const t = e.currentTarget;
-                    t.onerror = null;
-                    t.src = FALLBACK_IMG;
-                  }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur text-white text-[11px] font-bold">
-                  {trendFlyer.category}
-                </div>
-                {trendFlyer.couponCode && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(trendFlyer.couponCode ?? '', 'Coupon code')}
-                    title="Copy coupon code"
-                    className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-indigo-600/95 backdrop-blur text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-lg hover:bg-indigo-500 transition-colors"
-                  >
-                    <Ticket size={13} />
-                    <span>Coupon: {trendFlyer.couponCode} — tap to copy</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Variant Selector */}
-              {trendFlyer.versions && trendFlyer.versions.length > 1 && (
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="text-xs text-slate-500 font-medium">AI Variant:</span>
-                  {trendFlyer.versions.map((ver, idx) => (
-                    <button
-                      key={ver.id}
-                      onClick={() => selectFlyerVersion(trendFlyer.id, ver.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        (trendFlyer.selectedVersionId || trendFlyer.versions[0].id) === ver.id
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      Variant {String.fromCharCode(65 + idx)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Content & Action details */}
-            <div className="lg:col-span-8 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    Trend: {trendFlyer.trendContext}
-                  </span>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    96h Coupon Validity
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      AI Generated Social Caption
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(selectedVersion?.caption ?? '', 'Caption')}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                    >
-                      <Share2 size={12} /> Copy
-                    </button>
-                  </div>
-                  <p className="text-sm text-slate-800 leading-relaxed font-medium">
-                    {selectedVersion?.caption}
-                  </p>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
-                    Targeted Local Hashtags
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedVersion?.hashtags?.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => handleCopy(tag, 'Hashtag')}
-                        title="Copy hashtag"
-                        className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-indigo-700 hover:bg-indigo-100 transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Publish Actions */}
-              <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <Share2 size={14} className="text-slate-400" />
-                  <span>Will post to Instagram & Facebook Page</span>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  <Button
-                    onClick={() => navigate(ROUTES.OWNER_FLYERS)}
-                    variant="outline"
-                    className="border-slate-300 text-slate-700 font-semibold rounded-xl text-xs px-4"
-                  >
-                    View in Studio
-                  </Button>
-                  <Button
-                    onClick={() => handlePublishInstant(trendFlyer.id)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs px-4 shadow-sm flex items-center gap-1.5"
-                  >
-                    <Send size={14} />
-                    Publish Now
-                  </Button>
-                </div>
-              </div>
-            </div>
+          <div>
+            <h2 className="font-bold text-slate-900">AI Flyer Studio</h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+              Save all three business photos to queue an automatic trend flyer.
+              It is scheduled for Facebook and Instagram 72 hours after
+              generation. Custom flyers can be posted now or scheduled.
+            </p>
           </div>
         </div>
-      )}
+        <Button
+          onClick={() => navigate(ROUTES.OWNER_FLYERS)}
+          className="shrink-0 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+        >
+          Open Flyer Studio
+        </Button>
+      </section>
 
       {/* ── Two Column Grid: Pending Approvals & Live Activity ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

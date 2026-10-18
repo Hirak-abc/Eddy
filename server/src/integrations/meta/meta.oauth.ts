@@ -50,6 +50,15 @@ export const isMetaConfigured = (): boolean =>
       config.META_TOKEN_ENCRYPTION_KEY,
   );
 
+export const isMetaPublishingConfigured = (): boolean =>
+  Boolean(
+    ((process.env.META_PAGE_ID || config.META_PAGE_ID) &&
+      (process.env.META_PAGE_ACCESS_TOKEN || config.META_PAGE_ACCESS_TOKEN)) ||
+      ((process.env.META_IG_USER_ID || config.META_IG_USER_ID) &&
+        (process.env.META_IG_ACCESS_TOKEN || config.META_IG_ACCESS_TOKEN)) ||
+      isMetaConfigured(),
+  );
+
 export const createOAuthState = (clerkUserId: string): string => {
   const secret = config.META_STATE_SECRET;
   if (!secret) {

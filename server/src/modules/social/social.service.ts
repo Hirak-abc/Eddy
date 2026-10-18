@@ -10,11 +10,14 @@ import {
   exchangeCodeForUserToken,
   exchangeLongLivedUserToken,
   isMetaConfigured,
+  isMetaPublishingConfigured,
   parseOAuthState,
   publishFacebookPagePhoto,
   publishInstagramFeedPhoto,
 } from '../../integrations/meta';
 import { SOCIAL_REPOSITORY } from './social.repository';
+import { getEnvFallbackAccounts } from './social.env-accounts';
+import { FLYER_REPOSITORY } from '../flyer/flyer.repository';
 import type {
   DataDeletionRequest,
   MetaSignedRequestPayload,
@@ -97,6 +100,34 @@ const assertMetaConfigured = () => {
   }
 };
 
+const assertMetaPublishingConfigured = () => {
+  if (!isMetaPublishingConfigured()) {
+    throw new AppError(
+      ERROR_CODES.META_NOT_CONFIGURED,
+      'Meta publishing is not configured. Add page/Instagram tokens or complete Meta OAuth setup.',
+      503,
+    );
+  }
+};
+
+const mergePublishAccounts = (
+  stored: SocialAccountRecord[],
+  clerkUserId: string,
+): SocialAccountRecord[] => {
+  const envAccounts = getEnvFallbackAccounts(clerkUserId);
+  const merged = [...stored];
+  for (const envAccount of envAccounts) {
+    const exists = stored.some(
+      (account) =>
+        account.platform === envAccount.platform &&
+        account.externalId === envAccount.externalId &&
+        account.status === 'ACTIVE',
+    );
+    if (!exists) merged.push(envAccount);
+  }
+  return merged;
+};
+
 const toPublicAccount = (account: SocialAccountRecord): SocialAccountPublic => ({
   id: account.id,
   platform: account.platform,
@@ -121,6 +152,28 @@ const encryptToken = (token: string): string => {
 };
 
 const decryptToken = (payload?: string): string => {
+  if (payload === 'env:META_PAGE_ACCESS_TOKEN') {
+    const token = process.env.META_PAGE_ACCESS_TOKEN || config.META_PAGE_ACCESS_TOKEN;
+    if (!token) {
+      throw new AppError(
+        ERROR_CODES.META_NOT_CONFIGURED,
+        'META_PAGE_ACCESS_TOKEN is not configured.',
+        503,
+      );
+    }
+    return token;
+  }
+  if (payload === 'env:META_IG_ACCESS_TOKEN') {
+    const token = process.env.META_IG_ACCESS_TOKEN || config.META_IG_ACCESS_TOKEN;
+    if (!token) {
+      throw new AppError(
+        ERROR_CODES.META_NOT_CONFIGURED,
+        'META_IG_ACCESS_TOKEN is not configured.',
+        503,
+      );
+    }
+    return token;
+  }
   const key = config.META_TOKEN_ENCRYPTION_KEY;
   if (!key || !payload) {
     throw new AppError(
@@ -213,7 +266,7 @@ export const SOCIAL_SERVICE = {
 
   listAccounts: async (clerkUserId: string): Promise<SocialAccountPublic[]> => {
     const accounts = await SOCIAL_REPOSITORY.listAccounts(clerkUserId);
-    return accounts.map(toPublicAccount);
+    return mergePublishAccounts(accounts, clerkUserId).map(toPublicAccount);
   },
 
   updateAccount: async (
@@ -221,6 +274,19 @@ export const SOCIAL_SERVICE = {
     accountId: string,
     autoPublish: boolean,
   ): Promise<SocialAccountPublic> => {
+    if (accountId.startsWith('env:')) {
+      const envAccount = getEnvFallbackAccounts(clerkUserId).find(
+        (account) => account.id === accountId,
+      );
+      if (!envAccount) {
+        throw new AppError(
+          ERROR_CODES.SOCIAL_ACCOUNT_NOT_FOUND,
+          'Social account not found.',
+          404,
+        );
+      }
+      return toPublicAccount({ ...envAccount, autoPublish });
+    }
     const account = await SOCIAL_REPOSITORY.getAccountById(accountId);
     if (!account || account.clerkUserId !== clerkUserId) {
       throw new AppError(
@@ -234,6 +300,13 @@ export const SOCIAL_SERVICE = {
   },
 
   disconnectAccount: async (clerkUserId: string, accountId: string): Promise<void> => {
+    if (accountId.startsWith('env:')) {
+      throw new AppError(
+        ERROR_CODES.FORBIDDEN,
+        'Server-configured Meta test accounts cannot be disconnected here. Remove META_* tokens from the server environment instead.',
+        400,
+      );
+    }
     const account = await SOCIAL_REPOSITORY.getAccountById(accountId);
     if (!account || account.clerkUserId !== clerkUserId) {
       throw new AppError(
@@ -250,6 +323,7 @@ export const SOCIAL_SERVICE = {
 
   createAndPublishNow: async (input: {
     clerkUserId: string;
+    flyerId?: string;
     imageUrl: string;
     caption?: string;
     accountIds?: string[];
@@ -264,6 +338,7 @@ export const SOCIAL_SERVICE = {
 
   schedulePost: async (input: {
     clerkUserId: string;
+    flyerId?: string;
     imageUrl: string;
     caption?: string;
     accountIds?: string[];
@@ -283,14 +358,16 @@ export const SOCIAL_SERVICE = {
 
   enqueuePost: async (input: {
     clerkUserId: string;
+    flyerId?: string;
     imageUrl: string;
     caption?: string;
     accountIds?: string[];
     mode: 'NOW' | 'SCHEDULED';
     scheduledAt: string;
   }): Promise<SocialPostRecord> => {
-    assertMetaConfigured();
-    const accounts = await SOCIAL_REPOSITORY.listAccounts(input.clerkUserId);
+    assertMetaPublishingConfigured();
+    const stored = await SOCIAL_REPOSITORY.listAccounts(input.clerkUserId);
+    const accounts = mergePublishAccounts(stored, input.clerkUserId);
     let selected = accounts;
     if (input.accountIds?.length) {
       selected = accounts.filter((account) => input.accountIds?.includes(account.id));
@@ -310,6 +387,7 @@ export const SOCIAL_SERVICE = {
 
     return SOCIAL_REPOSITORY.createPost({
       clerkUserId: input.clerkUserId,
+      flyerId: input.flyerId,
       accountIds: selected.map((account) => account.id),
       imageUrl: input.imageUrl,
       caption: input.caption,
@@ -353,7 +431,13 @@ export const SOCIAL_SERVICE = {
   },
 
   processPost: async (post: SocialPostRecord): Promise<SocialPostRecord> => {
-    const accounts = await SOCIAL_REPOSITORY.getAccountsByIds(post.accountIds);
+    const stored = await SOCIAL_REPOSITORY.getAccountsByIds(
+      post.accountIds.filter((id) => !id.startsWith('env:')),
+    );
+    const envAccounts = getEnvFallbackAccounts(post.clerkUserId).filter((account) =>
+      post.accountIds.includes(account.id),
+    );
+    const accounts = [...stored, ...envAccounts];
     const targets = accounts.filter((account) => {
       if (account.status !== 'ACTIVE' || account.clerkUserId !== post.clerkUserId) {
         return false;
@@ -367,6 +451,15 @@ export const SOCIAL_SERVICE = {
     const results: SocialPostResult[] = [];
     for (const account of targets) {
       try {
+console.log('[PUBLISH DEBUG]', {
+  platform: account.platform,
+  accountId: account.id,
+  tokenSource:
+    typeof account.encryptedAccessToken === 'string' &&
+    account.encryptedAccessToken.startsWith('env:')
+      ? 'environment'
+      : 'stored OAuth',
+});
         const accessToken = decryptToken(account.encryptedAccessToken);
         const postId =
           account.platform === 'INSTAGRAM'
@@ -396,24 +489,38 @@ export const SOCIAL_SERVICE = {
       }
     }
 
-    const anySuccess = results.some((result) => result.postId);
-    const status = anySuccess ? 'PUBLISHED' : 'FAILED';
-    const errorMessage = anySuccess
+    const allSucceeded =
+      targets.length > 0 &&
+      results.length === targets.length &&
+      results.every((result) => Boolean(result.postId));
+    const status = allSucceeded ? 'PUBLISHED' : 'FAILED';
+    const errorMessage = allSucceeded
       ? undefined
       : results.map((result) => result.error).filter(Boolean).join('; ') ||
-        'No eligible accounts were published.';
+        'One or more selected accounts could not be published to.';
 
     await SOCIAL_REPOSITORY.markPostResult(post.id, status, {
       externalResults: results,
-      errorCode: anySuccess ? undefined : 'PUBLISH_FAILED',
+      errorCode: allSucceeded ? undefined : 'PUBLISH_FAILED',
       errorMessage,
     });
+    if (post.flyerId) {
+      if (allSucceeded) {
+        await FLYER_REPOSITORY.markPublished(post.flyerId, post.clerkUserId);
+      } else {
+        await FLYER_REPOSITORY.setPublicationError(
+          post.flyerId,
+          post.clerkUserId,
+          errorMessage || 'Scheduled publication failed.',
+        );
+      }
+    }
 
     return {
       ...post,
       status,
       externalResults: results,
-      errorCode: anySuccess ? undefined : 'PUBLISH_FAILED',
+      errorCode: allSucceeded ? undefined : 'PUBLISH_FAILED',
       errorMessage,
       updatedAt: new Date().toISOString(),
     };

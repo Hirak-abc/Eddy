@@ -21,7 +21,8 @@ const SAMPLE_CAPTION =
   'Celebrate this festive season at The Royal Chai and Cafe, Hazratganj. Flat 20% OFF festive combos with code NAVRATRI20. Valid 96 hours.';
 
 export const SocialPage = () => {
-  const { socialAccounts, toggleSocialConnection, updateSocialAutoPublish } = useOwner();
+  const { socialAccounts, toggleSocialConnection, updateSocialAutoPublish, refreshSocialAccounts } =
+    useOwner();
 
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [autoHashtags, setAutoHashtags] = useState(true);
@@ -32,30 +33,32 @@ export const SocialPage = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleToggleConnection = (platform: 'instagram' | 'facebook') => {
+  const handleToggleConnection = async (platform: 'instagram' | 'facebook') => {
     const isCurrentlyConnected = socialAccounts[platform].connected;
-    if (isCurrentlyConnected) {
-      toggleSocialConnection(platform);
-      toast.info(`Disconnected ${platform === 'instagram' ? 'Instagram' : 'Facebook'} account.`);
-    } else {
-      setIsConnecting(platform);
-      setTimeout(() => {
-        toggleSocialConnection(platform);
-        setIsConnecting(null);
-        toast.success(
-          `Successfully connected ${platform === 'instagram' ? 'Instagram Business' : 'Facebook Page'}!`
-        );
-      }, 1000);
+    setIsConnecting(platform);
+    try {
+      await toggleSocialConnection(platform);
+      if (isCurrentlyConnected) {
+        toast.info(`Disconnected ${platform === 'instagram' ? 'Instagram' : 'Facebook'} account.`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update Meta connection.');
+    } finally {
+      setIsConnecting(null);
     }
   };
 
-  const handleRefreshTokens = () => {
+  const handleRefreshTokens = async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
+    try {
+      await refreshSocialAccounts();
       setShowTokenModal(true);
-      toast.success('Meta Graph API access tokens refreshed. Valid for 60 days.');
-    }, 700);
+      toast.success('Loaded current Meta accounts from Eddy.');
+    } catch {
+      toast.error('Could not refresh Meta accounts.');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handlePrefToggle = (
@@ -102,7 +105,7 @@ export const SocialPage = () => {
             Social Media Integrations
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Connect Meta accounts once. Eddy drafts festival flyers and publishes them after your 48-hour review window.
+            Connect both Meta accounts and enable auto-publish. Automatic flyers are scheduled 72 hours after AI generation.
           </p>
         </div>
 
@@ -161,8 +164,8 @@ export const SocialPage = () => {
 
         <div className="shrink-0 space-y-0.5 rounded-2xl border border-white/10 bg-white/10 p-4 text-center backdrop-blur-xs">
           <div className="text-[11px] font-semibold uppercase text-indigo-200">Review Window</div>
-          <div className="font-mono text-xl font-black text-amber-300">48 Hours</div>
-          <div className="text-[11px] text-slate-300">2 flyers awaiting review</div>
+          <div className="font-mono text-xl font-black text-amber-300">72 Hours</div>
+          <div className="text-[11px] text-slate-300">after automatic flyer generation</div>
         </div>
       </div>
 
@@ -223,7 +226,7 @@ export const SocialPage = () => {
                 </div>
                 <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3">
                   <div>
-                    <div className="text-xs font-bold text-indigo-950">48h Auto-Publish</div>
+                    <div className="text-xs font-bold text-indigo-950">72h Auto-Publish</div>
                     <div className="text-[11px] text-indigo-700">Auto-post scheduled AI flyers</div>
                   </div>
                   <input
@@ -249,7 +252,10 @@ export const SocialPage = () => {
           <div className="border-t border-slate-100 pt-4">
             <Button
               onClick={() => handleToggleConnection('instagram')}
-              disabled={isConnecting === 'instagram'}
+              disabled={
+                isConnecting === 'instagram' ||
+                Boolean(socialAccounts.instagram.id?.startsWith('env:'))
+              }
               className={`w-full rounded-xl py-2.5 text-xs font-bold ${
                 socialAccounts.instagram.connected
                   ? 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
@@ -258,9 +264,11 @@ export const SocialPage = () => {
             >
               {isConnecting === 'instagram'
                 ? 'Connecting via Meta...'
-                : socialAccounts.instagram.connected
-                  ? 'Disconnect Instagram'
-                  : 'Connect Instagram Business'}
+                : socialAccounts.instagram.id?.startsWith('env:')
+                  ? 'Connected (server tokens)'
+                  : socialAccounts.instagram.connected
+                    ? 'Disconnect Instagram'
+                    : 'Connect Instagram Business'}
             </Button>
           </div>
         </div>
@@ -320,7 +328,7 @@ export const SocialPage = () => {
                 </div>
                 <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
                   <div>
-                    <div className="text-xs font-bold text-blue-950">48h Auto-Publish</div>
+                    <div className="text-xs font-bold text-blue-950">72h Auto-Publish</div>
                     <div className="text-[11px] text-blue-700">Cross-post flyers automatically</div>
                   </div>
                   <input
@@ -346,7 +354,10 @@ export const SocialPage = () => {
           <div className="border-t border-slate-100 pt-4">
             <Button
               onClick={() => handleToggleConnection('facebook')}
-              disabled={isConnecting === 'facebook'}
+              disabled={
+                isConnecting === 'facebook' ||
+                Boolean(socialAccounts.facebook.id?.startsWith('env:'))
+              }
               className={`w-full rounded-xl py-2.5 text-xs font-bold ${
                 socialAccounts.facebook.connected
                   ? 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
@@ -355,9 +366,11 @@ export const SocialPage = () => {
             >
               {isConnecting === 'facebook'
                 ? 'Connecting via Meta...'
-                : socialAccounts.facebook.connected
-                  ? 'Disconnect Facebook'
-                  : 'Connect Facebook Page'}
+                : socialAccounts.facebook.id?.startsWith('env:')
+                  ? 'Connected (server tokens)'
+                  : socialAccounts.facebook.connected
+                    ? 'Disconnect Facebook'
+                    : 'Connect Facebook Page'}
             </Button>
           </div>
         </div>
