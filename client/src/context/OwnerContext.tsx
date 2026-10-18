@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Flyer, FlyerVersion } from '../types/flyer';
 import type { Business, BusinessImages } from '../types';
 import type { Reward } from '../types/rewards';
 import type { WalletTransaction } from '../types/wallet';
+import { socialService, tokenDaysRemaining, type SocialAccount } from '../services/social.service';
+import { buildSocialCaption, isPublicHttpsImage } from '../lib/social-publish';
 
 export interface CouponItem {
   id: string;
@@ -32,6 +34,7 @@ export interface ReviewItem {
 }
 
 export interface SocialAccountState {
+  id?: string;
   connected: boolean;
   username?: string;
   pageName?: string;
@@ -71,7 +74,8 @@ export interface OwnerContextType {
   createFlyer: (flyerData: Partial<ExtendedFlyer>) => ExtendedFlyer;
   selectFlyerVersion: (flyerId: string, versionId: string) => void;
   scheduleFlyer: (flyerId: string, scheduledAt: string) => void;
-  publishFlyerNow: (flyerId: string) => void;
+  publishFlyerNow: (flyerId: string, snapshot?: ExtendedFlyer) => Promise<void>;
+  refreshSocialAccounts: () => Promise<void>;
   deleteFlyer: (flyerId: string) => void;
 
   // Coupons
@@ -98,7 +102,7 @@ export interface OwnerContextType {
     instagram: SocialAccountState;
     facebook: SocialAccountState;
   };
-  toggleSocialConnection: (platform: 'instagram' | 'facebook') => void;
+  toggleSocialConnection: (platform: 'instagram' | 'facebook') => Promise<void>;
   updateSocialAutoPublish: (platform: 'instagram' | 'facebook', autoPublish: boolean) => void;
 
   // Reviews
@@ -438,19 +442,19 @@ const defaultRewards: Reward[] = [
 
 const defaultSocialAccounts = {
   instagram: {
-    connected: true,
-    username: '@royalchaicafe_lucknow',
-    followers: 2840,
+    connected: false,
+    username: '@eddyofficial_01',
+    followers: 0,
     lastSync: new Date().toISOString(),
-    tokenExpiresDays: 42,
+    tokenExpiresDays: 0,
     autoPublish: true,
   },
   facebook: {
-    connected: true,
-    pageName: 'The Royal Chai & Cafe - Hazratganj',
-    likes: 1420,
+    connected: false,
+    pageName: 'EddyOfficial',
+    likes: 0,
     lastSync: new Date().toISOString(),
-    tokenExpiresDays: 58,
+    tokenExpiresDays: 0,
     autoPublish: true,
   },
 };
@@ -676,13 +680,13 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setBusiness((prev) => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
   };
 
-  const updateBusinessImages = (images: BusinessImages) => {
+  const updateBusinessImages = useCallback((images: BusinessImages) => {
     setBusiness((prev) => ({
       ...prev,
       images: { ...prev.images, ...images },
       updatedAt: new Date().toISOString(),
     }));
-  };
+  }, []);
 
   const toggleAutoPublish = (enabled?: boolean) => {
     setBusiness((prev) => ({
@@ -761,26 +765,100 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const publishFlyerNow = (flyerId: string) => {
-    const target = trendFlyer?.id === flyerId ? trendFlyer : scheduledFlyers.find((f) => f.id === flyerId);
-    if (!target) return;
+  const mapApiAccounts = (accounts: SocialAccount[]) => {
+    const ig = accounts.find(
+      (account) => account.platform === 'INSTAGRAM' && account.status === 'ACTIVE',
+    );
+    const fb = accounts.find(
+      (account) => account.platform === 'FACEBOOK_PAGE' && account.status === 'ACTIVE',
+    );
+    const syncAt = new Date().toISOString();
+    return {
+      instagram: {
+        id: ig?.id,
+        connected: Boolean(ig),
+        username: ig?.username
+          ? `@${ig.username.replace(/^@/, '')}`
+          : '@eddyofficial_01',
+        followers: ig ? 0 : undefined,
+        lastSync: syncAt,
+        tokenExpiresDays: tokenDaysRemaining(ig?.tokenExpiresAt) ?? 60,
+        autoPublish: ig?.autoPublish ?? true,
+      },
+      facebook: {
+        id: fb?.id,
+        connected: Boolean(fb),
+        pageName: fb?.name || 'EddyOfficial',
+        likes: fb ? 0 : undefined,
+        lastSync: syncAt,
+        tokenExpiresDays: tokenDaysRemaining(fb?.tokenExpiresAt) ?? 60,
+        autoPublish: fb?.autoPublish ?? true,
+      },
+    };
+  };
 
+  const refreshSocialAccounts = useCallback(async () => {
+    const response = await socialService.listAccounts();
+    if (!response.success || !response.data?.accounts) {
+      return;
+    }
+    setSocialAccounts(mapApiAccounts(response.data.accounts));
+  }, []);
+
+  useEffect(() => {
+    void refreshSocialAccounts();
+  }, [refreshSocialAccounts]);
+
+  const publishFlyerNow = async (flyerId: string, snapshot?: ExtendedFlyer) => {
+    const target =
+      snapshot?.id === flyerId
+        ? snapshot
+        : trendFlyer?.id === flyerId
+          ? trendFlyer
+          : scheduledFlyers.find((flyer) => flyer.id === flyerId) ||
+            publishedFlyers.find((flyer) => flyer.id === flyerId);
+    if (!target) {
+      throw new Error('Flyer not found.');
+    }
+
+    const imageUrl = target.imageUrl;
+    if (!isPublicHttpsImage(imageUrl)) {
+      throw new Error(
+        'Meta can only fetch a public HTTPS image. Local blob uploads are not hosted yet — use a hosted photo URL.',
+      );
+    }
+
+    const response = await socialService.publishNow({
+      imageUrl,
+      caption: buildSocialCaption(target),
+    });
+
+    if (!response.success || !response.data?.post) {
+      throw new Error(
+        response.error?.message || 'Publishing to Facebook or Instagram failed.',
+      );
+    }
+
+    const post = response.data.post;
     const published: ExtendedFlyer = {
       ...target,
-      status: 'PUBLISHED',
+      status: post.status === 'PUBLISHED' ? 'PUBLISHED' : 'FAILED',
       publishedAt: new Date().toISOString(),
-      socialPostId: `ig_post_${Date.now().toString().slice(-6)}`,
-      stats: { reach: 120, impressions: 180, likes: 14, shares: 2, couponsRedeemed: 1 },
+      socialPostId: post.id,
+      stats: { reach: 0, impressions: 0, likes: 0, shares: 0, couponsRedeemed: 0 },
       updatedAt: new Date().toISOString(),
     };
 
-    if (trendFlyer?.id === flyerId) {
-      setTrendFlyer(null);
-    } else {
-      setScheduledFlyers((prev) => prev.filter((f) => f.id !== flyerId));
-    }
+    setTrendFlyer((prev) => (prev?.id === flyerId ? null : prev));
+    setScheduledFlyers((prev) => prev.filter((flyer) => flyer.id !== flyerId));
+    setPublishedFlyers((prev) => [
+      published,
+      ...prev.filter((flyer) => flyer.id !== flyerId),
+    ]);
 
-    setPublishedFlyers((prev) => [published, ...prev]);
+    if (post.status !== 'PUBLISHED') {
+      throw new Error(post.errorMessage || 'Publishing to Facebook or Instagram failed.');
+    }
   };
 
   const deleteFlyer = (flyerId: string) => {
@@ -843,18 +921,48 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Social Actions
-  const toggleSocialConnection = (platform: 'instagram' | 'facebook') => {
-    setSocialAccounts((prev) => ({
-      ...prev,
-      [platform]: {
-        ...prev[platform],
-        connected: !prev[platform].connected,
-        lastSync: new Date().toISOString(),
-      },
-    }));
+  const toggleSocialConnection = async (platform: 'instagram' | 'facebook') => {
+    const current = socialAccounts[platform];
+    if (current.connected) {
+      if (current.id?.startsWith('env:')) {
+        throw new Error(
+          'EddyOfficial and eddyofficial_01 are configured with server Meta tokens and cannot be disconnected in the UI.',
+        );
+      }
+      if (current.id) {
+        const response = await socialService.disconnect(current.id);
+        if (!response.success) {
+          throw new Error(response.error?.message || 'Failed to disconnect account.');
+        }
+      }
+      setSocialAccounts((prev) => ({
+        ...prev,
+        [platform]: {
+          ...prev[platform],
+          id: undefined,
+          connected: false,
+          lastSync: new Date().toISOString(),
+        },
+      }));
+      return;
+    }
+
+    const response = await socialService.getConnectUrl();
+    if (response.success && response.data?.authorizationUrl) {
+      window.location.href = response.data.authorizationUrl;
+      return;
+    }
+    throw new Error(
+      response.error?.message ||
+        'Meta OAuth is not configured. Server tokens still publish to EddyOfficial and eddyofficial_01.',
+    );
   };
 
   const updateSocialAutoPublish = (platform: 'instagram' | 'facebook', autoPublish: boolean) => {
+    const accountId = socialAccounts[platform].id;
+    if (accountId && !accountId.startsWith('env:')) {
+      void socialService.updateAutoPublish(accountId, autoPublish);
+    }
     setSocialAccounts((prev) => ({
       ...prev,
       [platform]: {
@@ -923,6 +1031,7 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         selectFlyerVersion,
         scheduleFlyer,
         publishFlyerNow,
+        refreshSocialAccounts,
         deleteFlyer,
         coupons,
         createCoupon,

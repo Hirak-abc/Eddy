@@ -60,7 +60,7 @@ export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolea
           name: 'Flyer Studio',
           path: ROUTES.OWNER_FLYERS,
           icon: Sparkles,
-          badge: trendFlyer ? 'Auto 48h' : undefined,
+          badge: trendFlyer ? 'Auto 72h' : undefined,
           badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
           accentColor: 'text-indigo-400',
         },

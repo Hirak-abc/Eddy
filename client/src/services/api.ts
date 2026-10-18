@@ -1,7 +1,7 @@
 import { ApiResponse } from '../types/api';
 import { API_BASE_URL } from '../lib/constants';
 
-type AuthTokenGetter = () => Promise<string | null>;
+type AuthTokenGetter = (options?: { skipCache?: boolean }) => Promise<string | null>;
 
 let authTokenGetter: AuthTokenGetter | null = null;
 
@@ -22,7 +22,19 @@ async function request<T>(
       ...options.headers,
     };
 
-    const response = await fetch(url, { ...options, headers });
+    let response = await fetch(url, { ...options, headers });
+    if (response.status === 401 && authTokenGetter) {
+      const freshToken = await authTokenGetter({ skipCache: true });
+      if (freshToken && freshToken !== token) {
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            ...headers,
+            Authorization: `Bearer ${freshToken}`,
+          },
+        });
+      }
+    }
     const responseText = await response.text();
     let envelope: ApiResponse<T> | null = null;
 
@@ -78,4 +90,13 @@ export const api = {
       body: JSON.stringify(body),
     }),
   delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+  upload: <T>(endpoint: string, file: File) =>
+    request<T>(endpoint, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Image-Content-Type': file.type,
+      },
+    }),
 };

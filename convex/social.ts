@@ -143,6 +143,7 @@ export const updateAccount = mutation({
 export const createPost = mutation({
   args: {
     clerkUserId: v.string(),
+    flyerId: v.optional(v.string()),
     accountIds: v.array(v.string()),
     imageUrl: v.string(),
     caption: v.optional(v.string()),
@@ -154,6 +155,7 @@ export const createPost = mutation({
     const now = new Date().toISOString();
     return await ctx.db.insert("socialPosts", {
       clerkUserId: args.clerkUserId,
+      flyerId: args.flyerId,
       accountIds: args.accountIds,
       imageUrl: args.imageUrl,
       caption: args.caption,

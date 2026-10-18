@@ -84,7 +84,7 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
               ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
               : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
           }`}
-          title="Toggle automatic AI flyer publication (48h window)"
+          title="Toggle automatic AI flyer publication (72h after generation)"
         >
           <Clock size={13} className={business.autoPublish ? 'text-indigo-600' : 'text-slate-400'} />
           <span>Auto-Publish: <strong>{business.autoPublish ? 'ON' : 'PAUSED'}</strong></span>

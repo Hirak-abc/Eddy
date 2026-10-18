@@ -11,7 +11,7 @@ const keyBytes = (secret: string): Buffer => {
 
 export const encryptSecret = (plaintext: string, secret: string): string => {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALGO, keyBytes(secret), iv);
+    const cipher = crypto.createCipheriv(ALGO, keyBytes(secret), iv);
   const encrypted = Buffer.concat([
     cipher.update(plaintext, 'utf8'),
     cipher.final(),

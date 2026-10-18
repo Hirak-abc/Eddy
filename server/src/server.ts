@@ -1,5 +1,8 @@
+import path from 'path';
 import { config } from 'dotenv';
-config(); // Load .env file
+
+config({ path: path.resolve(__dirname, '../../.env') });
+config({ path: path.resolve(process.cwd(), '.env') });
 
 import app from './app';
 import { config as envConfig } from './config/env';

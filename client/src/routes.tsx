@@ -15,8 +15,6 @@ import { DashboardPage as OwnerDashboardPage } from './pages/owner/DashboardPage
 import { OnboardingPage } from './pages/owner/OnboardingPage';
 import { FlyerBuilderPage } from './pages/owner/FlyerBuilderPage';
 import { FlyersDashboardPage } from './pages/owner/FlyersDashboardPage';
-import { ScheduledFlyersPage } from './pages/owner/ScheduledFlyersPage';
-import { PublishedFlyersPage } from './pages/owner/PublishedFlyersPage';
 import { TrendFlyersPage } from './pages/owner/TrendFlyersPage';
 import { CouponsPage as OwnerCouponsPage } from './pages/owner/CouponsPage';
 import { ReviewsPage as OwnerReviewsPage } from './pages/owner/ReviewsPage';
@@ -107,11 +105,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'flyers/scheduled',
-        element: <ScheduledFlyersPage />,
+        element: <FlyersDashboardPage />,
       },
       {
         path: 'flyers/published',
-        element: <PublishedFlyersPage />,
+        element: <FlyersDashboardPage />,
       },
       {
         path: 'flyers/trends',

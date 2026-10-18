@@ -18,7 +18,7 @@ export const MAX_DAILY_SCANS = 100;
 
 // ── Flyer / Coupon rules ─────────────────────────────
 export const COUPON_VALIDITY_HOURS = 96;
-export const AUTO_PUBLISH_WINDOW_HOURS = 48;
+export const AUTO_PUBLISH_WINDOW_HOURS = 72;
 
 // ── Streak rules ─────────────────────────────────────
 export const STREAK_MILESTONE_DAYS = 10;

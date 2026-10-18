@@ -308,7 +308,7 @@ export const SettingsPage = () => {
                   key: 'push' as const,
                   icon: Bell,
                   label: 'Browser Push',
-                  desc: 'Real-time browser notifications for 48h publish window reminders',
+                  desc: 'Real-time browser notifications for the 72-hour automatic flyer publish schedule',
                 },
               ].map((item) => (
                 <div

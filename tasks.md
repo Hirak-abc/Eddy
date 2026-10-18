@@ -298,11 +298,8 @@
 - [ ] Allow owner to select one flyer.
 - [ ] Publish selected flyer.
 - [ ] Support automatic publishing setting.
-- [ ] Start 48-hour owner decision window.
-- [ ] If owner selects within 48 hours, publish selected flyer.
-- [ ] If owner does not select within 48 hours and auto-publish is ON, select one flyer and publish.
-- [ ] If auto-publish is OFF, do not publish automatically.
-- [ ] Allow owner to disable automatic publishing.
+- [ ] Start a 72-hour publishing delay after automatic flyer generation.
+- [ ] Publish the automatic flyer after 72 hours when Facebook and Instagram accounts are connected.
 
 ---
 
@@ -938,7 +935,7 @@ These rules are taken from the current workflow/architecture and should be treat
 - Customer wallet maximum: **100 coins**.
 - Coin value: **1 coin = ₹1**.
 - Owner wallet: **No upper limit under the proposed model**.
-- Automatic flyer publication: **After 48 hours only when enabled by the owner**.
+- Automatic flyer publication: **72 hours after generation when Facebook and Instagram accounts are connected**.
 - Flyer coupon validity: **96 hours**.
 - Flyer coupon usage: **One-time**.
 - Coin redemption: **Requires owner approval**.
@@ -986,7 +983,7 @@ The MVP is ready for design-partner testing when:
 - [ ] The system generates a hidden one-time coupon.
 - [ ] The owner can review/select a flyer.
 - [ ] The selected flyer can be published.
-- [ ] Automatic publishing after 48 hours works when enabled.
+- [ ] Automatic publishing after 72 hours works when Facebook and Instagram accounts are connected.
 - [ ] A customer can scan the QR.
 - [ ] The 3-scans/day limit is enforced server-side.
 - [ ] A customer can spin the reward wheel.

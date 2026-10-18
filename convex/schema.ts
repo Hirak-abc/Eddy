@@ -56,6 +56,7 @@ export default defineSchema({
 
   socialPosts: defineTable({
     clerkUserId: v.string(),
+    flyerId: v.optional(v.string()),
     accountIds: v.array(v.string()),
     imageUrl: v.string(),
     caption: v.optional(v.string()),
@@ -86,4 +87,81 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
   }).index("by_status_scheduledAt", ["status", "scheduledAt"]),
+
+  businessImages: defineTable({
+    clerkUserId: v.string(),
+    slot: v.union(
+      v.literal("shop"),
+      v.literal("product"),
+      v.literal("item"),
+    ),
+    storageId: v.id("_storage"),
+    uploadedAt: v.string(),
+  }).index("by_owner_slot", ["clerkUserId", "slot"]),
+
+  flyers: defineTable({
+    ownerClerkId: v.string(),
+    businessId: v.string(),
+    businessName: v.string(),
+    businessCategory: v.string(),
+    businessLocation: v.string(),
+    kind: v.union(v.literal("AUTOMATIC"), v.literal("CUSTOM")),
+    status: v.union(
+      v.literal("QUEUED"),
+      v.literal("GENERATING"),
+      v.literal("READY"),
+      v.literal("SCHEDULED"),
+      v.literal("PUBLISHED"),
+      v.literal("FAILED"),
+    ),
+    title: v.string(),
+    topic: v.string(),
+    language: v.union(
+      v.literal("HINDI"),
+      v.literal("ENGLISH"),
+      v.literal("HINGLISH"),
+    ),
+    sourceImageUrl: v.string(),
+    imageUrl: v.optional(v.string()),
+    caption: v.optional(v.string()),
+    hashtags: v.array(v.string()),
+    couponCodeHash: v.optional(v.string()),
+    couponDiscountPercent: v.optional(v.number()),
+    couponExpiresAt: v.optional(v.string()),
+    couponClaimedBy: v.optional(v.string()),
+    couponClaimedByName: v.optional(v.string()),
+    couponClaimedAt: v.optional(v.string()),
+    couponRequestStatus: v.optional(
+      v.union(
+        v.literal("CLAIMED"),
+        v.literal("REQUESTED"),
+        v.literal("REJECTED"),
+        v.literal("APPROVED"),
+      ),
+    ),
+    couponRequestedAt: v.optional(v.string()),
+    couponBillAmount: v.optional(v.number()),
+    couponDiscountAmount: v.optional(v.number()),
+    scheduledAt: v.optional(v.string()),
+    socialPostId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_owner_created", ["ownerClerkId", "createdAt"])
+    .index("by_status_created", ["status", "createdAt"])
+    .index("by_coupon_hash", ["couponCodeHash"])
+    .index("by_claimed_customer", ["couponClaimedBy"]),
+
+  couponTransactions: defineTable({
+    ownerClerkId: v.string(),
+    customerClerkId: v.string(),
+    flyerId: v.id("flyers"),
+    billAmount: v.number(),
+    discountPercent: v.number(),
+    discountAmount: v.number(),
+    createdAt: v.string(),
+  })
+    .index("by_owner", ["ownerClerkId"])
+    .index("by_customer", ["customerClerkId"]),
 });

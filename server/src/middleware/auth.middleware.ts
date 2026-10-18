@@ -3,6 +3,22 @@ import { verifyToken } from '@clerk/backend';
 import type { UserRole } from '../types';
 import { ERROR_CODES } from '../config/constants';
 import { config } from '../config/env';
+import { clerkClient } from '../integrations/clerk/client';
+
+const asUserRole = (value: unknown): UserRole | undefined =>
+  value === 'OWNER' || value === 'CUSTOMER' || value === 'ADMIN' ? value : undefined;
+
+const roleFromClaims = (claims: Record<string, unknown>): UserRole | undefined => {
+  const metadata = claims.metadata as { role?: unknown } | undefined;
+  const publicMetadata = (claims.publicMetadata ?? claims.public_metadata) as
+    | { role?: unknown }
+    | undefined;
+  return (
+    asUserRole(metadata?.role) ||
+    asUserRole(publicMetadata?.role) ||
+    asUserRole(claims.role)
+  );
+};
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authorization = req.headers.authorization;
@@ -20,10 +36,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
   try {
     const claims = await verifyToken(token, { secretKey: config.CLERK_SECRET_KEY });
-    const metadata = (claims.metadata ?? {}) as { role?: unknown };
-    const role = metadata.role;
-    const userRole: UserRole | undefined =
-      role === 'OWNER' || role === 'CUSTOMER' || role === 'ADMIN' ? role : undefined;
+    let userRole = roleFromClaims(claims as unknown as Record<string, unknown>);
+
+    if (!userRole && clerkClient) {
+      const user = await clerkClient.users.getUser(claims.sub);
+      userRole = asUserRole(user.publicMetadata?.role);
+    }
 
     req.user = { id: claims.sub, role: userRole };
     next();

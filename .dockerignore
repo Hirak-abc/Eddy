@@ -17,7 +17,6 @@ client/.env.local
 .vscode/
 .idea/
 .convex/
-convex/_generated/
 
 # Logs / OS noise
 *.log

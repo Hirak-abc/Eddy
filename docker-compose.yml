@@ -19,6 +19,7 @@ services:
       - "5000:5000"
     env_file:
       - ./server/.env
+      - ./server/.env.meta.local
     environment:
       - NODE_ENV=development
       - PORT=5000

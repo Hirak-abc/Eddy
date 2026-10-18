@@ -1024,10 +1024,10 @@ flowchart LR
 
     Decision -->|Select| Publish["Publish"]
 
-    Decision -->|No action for 48h| Auto{"Auto Publish ON?"}
+    Decision -->|72 hours after generation| Auto{"Both social accounts connected?"}
 
     Auto -->|Yes| Publish
-    Auto -->|No| End["No Publication"]
+    Auto -->|No| End["Publication needs account setup"]
 ```
 
 ---
@@ -1421,6 +1421,11 @@ XAI_API_KEY=
 META_APP_ID=
 META_APP_SECRET=
 META_REDIRECT_URI=
+META_GRAPH_API_VERSION=v26.0
+META_PAGE_ID=
+META_PAGE_ACCESS_TOKEN=
+META_IG_USER_ID=
+META_IG_ACCESS_TOKEN=
 
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=

@@ -1,4 +1,10 @@
+import path from 'path';
+import { config as loadDotenv } from 'dotenv';
 import { z } from 'zod';
+
+loadDotenv({ path: path.resolve(__dirname, '../../../.env') });
+loadDotenv({ path: path.resolve(__dirname, '../../.env') });
+loadDotenv({ path: path.resolve(process.cwd(), '.env') });
 
 export const config = {
   PORT: process.env.PORT || 5001,
@@ -7,13 +13,22 @@ export const config = {
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
   CONVEX_URL: process.env.CONVEX_URL,
+  EDDY_CONVEX_SECRET: process.env.EDDY_CONVEX_SECRET,
   XAI_API_KEY: process.env.XAI_API_KEY,
   META_APP_ID: process.env.META_APP_ID,
   META_APP_SECRET: process.env.META_APP_SECRET,
   META_REDIRECT_URI: process.env.META_REDIRECT_URI,
   META_GRAPH_API_VERSION: process.env.META_GRAPH_API_VERSION || 'v21.0',
+  META_IG_GRAPH_API_VERSION: process.env.META_IG_GRAPH_API_VERSION || 'v21.0',
   META_STATE_SECRET: process.env.META_STATE_SECRET,
   META_TOKEN_ENCRYPTION_KEY: process.env.META_TOKEN_ENCRYPTION_KEY,
+  META_PAGE_ID: process.env.META_PAGE_ID,
+  META_PAGE_NAME: process.env.META_PAGE_NAME,
+  META_PAGE_ACCESS_TOKEN: process.env.META_PAGE_ACCESS_TOKEN,
+  META_USER_ACCESS_TOKEN: process.env.META_USER_ACCESS_TOKEN,
+  META_IG_USER_ID: process.env.META_IG_USER_ID,
+  META_IG_USERNAME: process.env.META_IG_USERNAME,
+  META_IG_ACCESS_TOKEN: process.env.META_IG_ACCESS_TOKEN,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,

@@ -45,17 +45,16 @@ export const ScheduledFlyersPage = () => {
         </Button>
       </div>
 
-      {/* ── 48-Hour Auto-Review Explanation Banner ──────────────────────────── */}
+      {/* ── Automatic Publishing Explanation Banner ─────────────────────────── */}
       <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex items-start gap-3">
         <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
           <Info size={16} />
         </div>
         <div className="space-y-1">
-          <h4 className="text-xs font-bold text-slate-900">48-Hour AI Review Window Active</h4>
+          <h4 className="text-xs font-bold text-slate-900">72-Hour Automatic Publishing Window</h4>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Eddy generates flyer campaigns based on local trends and queues them here. You have 48 hours to review,
-            swap AI variations, or customize coupon codes before they automatically publish to your Instagram and
-            Facebook channels.
+            Eddy generates flyer campaigns based on India-relevant trends and schedules them to publish to your
+            connected Facebook and Instagram accounts 72 hours after generation.
           </p>
         </div>
       </div>
@@ -134,9 +133,13 @@ export const ScheduledFlyersPage = () => {
                 </Button>
 
                 <Button
-                  onClick={() => {
-                    publishFlyerNow(flyer.id);
-                    toast.success('Flyer published live now!');
+                  onClick={async () => {
+                    try {
+                      await publishFlyerNow(flyer.id);
+                      toast.success('Flyer published live now!');
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : 'Publishing failed.');
+                    }
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
                 >
@@ -164,7 +167,15 @@ export const ScheduledFlyersPage = () => {
         flyer={selectedFlyer}
         isOpen={!!selectedFlyer}
         onClose={() => setSelectedFlyer(null)}
-        onPublishNow={(id) => publishFlyerNow(id)}
+        onPublishNow={async (id) => {
+          try {
+            await publishFlyerNow(id);
+            toast.success('Flyer published live now!');
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Publishing failed.');
+            throw error;
+          }
+        }}
       />
     </div>
   );
