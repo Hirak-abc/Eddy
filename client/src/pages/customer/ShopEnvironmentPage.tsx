@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { getShopById } from '@/data/shops';
 import { cn } from '@/lib/utils';
+import { MAX_DAILY_SCANS } from '@/lib/constants';
 
 const FREE_ITEM_BY_SHOP: Record<string, string> = {
   'sharma-sweets': 'Free Jalebi (250 g)',
@@ -226,8 +227,8 @@ export const ShopEnvironmentPage = () => {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-slate-800">3</div>
-            <div className="mt-1 text-xs text-slate-500">Scans Left Today</div>
+            <div className="text-2xl font-bold text-slate-800">{MAX_DAILY_SCANS}</div>
+            <div className="mt-1 text-xs text-slate-500">Daily Scan Limit</div>
           </CardContent>
         </Card>
       </div>
@@ -343,7 +344,7 @@ export const ShopEnvironmentPage = () => {
             </span>
             <span className="inline-flex items-center gap-2">
               <QrCode size={15} className="shrink-0 text-amber-300" />
-              3 free scans left today
+              Up to {MAX_DAILY_SCANS} scans per day
             </span>
           </div>
         </CardContent>

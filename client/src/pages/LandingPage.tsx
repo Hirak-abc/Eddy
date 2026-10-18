@@ -8,9 +8,10 @@ import { GenerationWorkflow } from '../components/landing/GenerationWorkflow';
 import { FlyerGallery } from '../components/landing/FlyerGallery';
 import { TestimonialsSection } from '../components/landing/TestimonialsSection';
 import { CTAFooter } from '../components/landing/CTAFooter';
+import { AuthStatusScreen } from './auth/AuthStatusScreen';
 
 export const LandingPage = () => {
-  const { isLoaded, isSignedIn, userRole } = useAuth();
+  const { isLoaded, isSignedIn, userRole, isRoleLoading, roleError } = useAuth();
 
   if (!isLoaded) return <div>Loading...</div>;
   if (isSignedIn && (userRole === 'OWNER' || userRole === 'ADMIN')) {
@@ -19,7 +20,18 @@ export const LandingPage = () => {
   if (isSignedIn && userRole === 'CUSTOMER') {
     return <Navigate to={ROUTES.CUSTOMER_HOME} replace />;
   }
-  if (isSignedIn) return <div>Loading account...</div>;
+  if (isSignedIn && roleError) {
+    return (
+      <AuthStatusScreen
+        message=""
+        error={roleError}
+        errorTitle="Account verification failed"
+      />
+    );
+  }
+  if (isSignedIn && (!userRole || isRoleLoading)) {
+    return <AuthStatusScreen message="Verifying your account…" />;
+  }
 
   return (
     <div className="bg-white">

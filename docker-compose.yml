@@ -16,12 +16,12 @@ services:
       context: .
       dockerfile: server/Dockerfile
     ports:
-      - "5000:5000"
+      - "5001:5001"
     env_file:
       - ./server/.env
     environment:
       - NODE_ENV=development
-      - PORT=5000
+      - PORT=5001
       - CLIENT_URL=http://localhost:5173
     volumes:
       # Live reload source without overwriting container node_modules
@@ -41,7 +41,7 @@ services:
       # Browser calls the server directly (bypasses Vite proxy, which points
       # at localhost and would fail from inside the container).
       # Server uses open cors() in server/src/app.ts, so this works.
-      - VITE_API_URL=http://localhost:5000/api
+      - VITE_API_URL=http://localhost:5001/api
       # Pass through if set in your shell; otherwise set in client/.env.local (git-ignored)
       - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-}
       - VITE_GA_MEASUREMENT_ID=${VITE_GA_MEASUREMENT_ID:-}

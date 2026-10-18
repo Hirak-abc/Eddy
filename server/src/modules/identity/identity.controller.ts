@@ -18,15 +18,7 @@ export const IDENTITY_CONTROLLER = {
           error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
         });
       }
-      if (req.user?.role) {
-        return res.status(409).json({
-          success: false,
-          data: null,
-          error: { code: 'ROLE_ALREADY_SET', message: 'This account already has a role' },
-        });
-      }
-
-      const user = await IDENTITY_SERVICE.setRole(userId, role);
+      const user = await IDENTITY_SERVICE.setRole(userId, role, req.authToken!);
       return res.status(200).json({ success: true, data: user, error: null });
     } catch (error) {
       next(error);
@@ -35,7 +27,7 @@ export const IDENTITY_CONTROLLER = {
 
   getMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await IDENTITY_SERVICE.getCurrentUser(req.user!.id);
+      const user = await IDENTITY_SERVICE.getCurrentUser(req.user!.id, req.authToken!);
       res.status(200).json({ success: true, data: user, error: null });
     } catch (error) {
       next(error);
@@ -44,7 +36,11 @@ export const IDENTITY_CONTROLLER = {
 
   updateMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedUser = await IDENTITY_SERVICE.updateCurrentUser(req.user!.id, req.body);
+      const updatedUser = await IDENTITY_SERVICE.updateCurrentUser(
+        req.user!.id,
+        req.body,
+        req.authToken!,
+      );
       res.status(200).json({ success: true, data: updatedUser, error: null });
     } catch (error) {
       next(error);

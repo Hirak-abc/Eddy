@@ -5,7 +5,8 @@ export const WALLET_RULES = {
 };
 
 export const QR_RULES = {
-  MAX_DAILY_SCANS_PER_CUSTOMER: 3,
+  MAX_DAILY_SCANS_PER_CUSTOMER: 100,
+  COINS_PER_SCAN: 10,
 };
 
 export const FLYER_RULES = {

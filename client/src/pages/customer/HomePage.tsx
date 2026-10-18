@@ -2,17 +2,21 @@ import { Link } from 'react-router-dom';
 import { QrCode, Sparkles, Search, Wallet, ChevronRight, Flame, MapPin, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SHOPS } from '@/data/shops';
-
-const QUICK_ACTIONS = [
-  { label: 'Scan QR', detail: 'Earn coins', icon: QrCode, to: '/customer/scan', color: 'bg-emerald-100 text-emerald-600' },
-  { label: 'Spin & Win', detail: 'Try luck', icon: Sparkles, to: '/customer/spin-wheel', color: 'bg-amber-100 text-amber-600' },
-  { label: 'Discover', detail: 'Find shops', icon: Search, to: '/customer/discover', color: 'bg-blue-100 text-blue-600' },
-  { label: 'Wallet', detail: '85 coins', icon: Wallet, to: '/customer/wallet', color: 'bg-violet-100 text-violet-600' },
-];
+import { useCustomerWallet } from '@/hooks/useCustomerWallet';
 
 const NEARBY = SHOPS.slice(0, 3);
 
-export const HomePage = () => (
+export const HomePage = () => {
+  const { wallet, isLoading, error } = useCustomerWallet();
+  const balanceLabel = isLoading ? '…' : wallet?.balance ?? '—';
+  const quickActions = [
+    { label: 'Scan QR', detail: 'Earn coins', icon: QrCode, to: '/customer/scan', color: 'bg-emerald-100 text-emerald-600' },
+    { label: 'Spin & Win', detail: 'Try luck', icon: Sparkles, to: '/customer/spin-wheel', color: 'bg-amber-100 text-amber-600' },
+    { label: 'Discover', detail: 'Find shops', icon: Search, to: '/customer/discover', color: 'bg-blue-100 text-blue-600' },
+    { label: 'Wallet', detail: `${balanceLabel} coins`, icon: Wallet, to: '/customer/wallet', color: 'bg-violet-100 text-violet-600' },
+  ];
+
+  return (
   <div className="space-y-6">
     {/* Hero */}
     <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-8 text-white shadow-2xl sm:p-10">
@@ -32,7 +36,9 @@ export const HomePage = () => (
           Good evening, welcome back!
         </h1>
         <p className="text-slate-300">
-          You have <span className="font-extrabold text-amber-300">85 coins</span> (≈ ₹85) and 3 scans left today.
+          {error ? 'Your wallet balance is currently unavailable.' : (
+            <>You have <span className="font-extrabold text-amber-300">{balanceLabel} coins</span>{!isLoading && wallet ? ` (≈ ₹${wallet.balance})` : ''}.</>
+          )}
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
           <Link
@@ -53,7 +59,7 @@ export const HomePage = () => (
 
     {/* Quick actions */}
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {QUICK_ACTIONS.map((action) => (
+      {quickActions.map((action) => (
         <Link key={action.label} to={action.to}>
           <Card className="transition-all hover:-translate-y-0.5 hover:shadow-lg">
             <CardContent className="flex items-center gap-3 p-4">
@@ -111,4 +117,5 @@ export const HomePage = () => (
       </div>
     </div>
   </div>
-);
+  );
+};

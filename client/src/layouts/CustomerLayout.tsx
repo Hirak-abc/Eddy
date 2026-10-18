@@ -3,10 +3,12 @@ import { Coins, MapPin } from 'lucide-react';
 import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useProfilePhoto } from '../hooks/useProfilePhoto';
+import { useCustomerWallet } from '../hooks/useCustomerWallet';
 import { ROUTES } from '../lib/constants';
 
 export const CustomerLayout = () => {
   const { photoUrl } = useProfilePhoto();
+  const { wallet, isLoading } = useCustomerWallet();
 
   return (
     <div className="flex min-h-screen">
@@ -20,7 +22,7 @@ export const CustomerLayout = () => {
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-extrabold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30">
               <Coins size={15} />
-              85
+              {isLoading ? '…' : wallet?.balance ?? '—'}
             </span>
             <ThemeToggle />
             <Link

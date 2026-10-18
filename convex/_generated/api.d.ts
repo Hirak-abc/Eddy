@@ -8,9 +8,16 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
+import type * as businesses from "../businesses.js";
 import type * as qr from "../qr.js";
+import type * as redemptions from "../redemptions.js";
+import type * as rewardPool from "../rewardPool.js";
+import type * as rewards from "../rewards.js";
+import type * as settlements from "../settlements.js";
 import type * as social from "../social.js";
 import type * as users from "../users.js";
+import type * as wallets from "../wallets.js";
 
 import type {
   ApiFromModules,
@@ -19,9 +26,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
+  businesses: typeof businesses;
   qr: typeof qr;
+  redemptions: typeof redemptions;
+  rewardPool: typeof rewardPool;
+  rewards: typeof rewards;
+  settlements: typeof settlements;
   social: typeof social;
   users: typeof users;
+  wallets: typeof wallets;
 }>;
 
 /**

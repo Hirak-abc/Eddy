@@ -1,38 +1,39 @@
-import { convexClient } from '../../integrations/convex/client';
+import { makeFunctionReference } from 'convex/server';
+import { convexClient, createAuthenticatedConvexClient } from '../../integrations/convex/client';
+import type { QrScanRecord, QrStatusResult, ResolvedQrShop } from './qr.types';
+
+const recordScan = makeFunctionReference<
+  'mutation',
+  { qrToken: string },
+  QrScanRecord
+>('qr:recordScan');
+const getScansCountToday = makeFunctionReference<
+  'query',
+  Record<string, never>,
+  QrStatusResult
+>('qr:getScansCountToday');
+const resolveQr = makeFunctionReference<
+  'query',
+  { qrToken: string },
+  ResolvedQrShop | null
+>('businesses:resolveQr');
 
 export const QR_REPOSITORY = {
-  recordScan: async (customerId: string, businessId: string, scannedAt: string, dateString: string) => {
-    if (!convexClient) {
-      // Mock fallback if Convex is offline
-      return { scanId: 'mock-scan-id', scansCountToday: 1 };
-    }
-    try {
-      const result = await convexClient.mutation('qr:recordScan' as any, {
-        customerId,
-        businessId,
-        scannedAt,
-        dateString,
-      });
-      return result;
-    } catch (error: any) {
-      console.error('Convex recordScan error:', error);
-      throw error;
-    }
-  },
+  recordScan: (
+    qrToken: string,
+    token: string,
+  ) =>
+    createAuthenticatedConvexClient(token).mutation(recordScan, {
+      qrToken,
+    }),
 
-  getScansCountToday: async (customerId: string, dateString: string) => {
+  getScansCountToday: (token: string) =>
+    createAuthenticatedConvexClient(token).query(getScansCountToday, {}),
+
+  resolveQr: async (qrToken: string) => {
     if (!convexClient) {
-      return 0;
+      throw new Error('Shop QR resolution requires a configured Convex deployment.');
     }
-    try {
-      const count = await convexClient.query('qr:getScansCountToday' as any, {
-        customerId,
-        dateString,
-      });
-      return count as number;
-    } catch (error) {
-      console.error('Error fetching scan count from Convex:', error);
-      return 0;
-    }
+    return await convexClient.query(resolveQr, { qrToken });
   },
 };

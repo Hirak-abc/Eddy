@@ -31,7 +31,7 @@ export const TERMS_SECTIONS: TermsSection[] = [
   },
   {
     title: '6. QR Scans and Streaks',
-    body: 'QR codes identify participating businesses and contain no sensitive credentials. QR scans are limited to 3 scans per customer per day, enforced server-side. Streaks are calculated server-side; current milestones grant +10 coins at 10, 20, and 30 days, and three consecutive inactive days reset the streak. Eddy may update these limits and milestones with notice through the service.',
+    body: 'QR codes identify participating businesses and contain no sensitive credentials. QR scans are limited to 100 scans per customer per day, enforced server-side. Streaks are calculated server-side; current milestones grant +10 coins at 10, 20, and 30 days, and three consecutive inactive days reset the streak. Eddy may update these limits and milestones with notice through the service.',
   },
   {
     title: '7. Coupons',

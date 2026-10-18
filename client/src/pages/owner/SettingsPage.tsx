@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { useOwner } from '@/context/OwnerContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { clearAuthFlowState } from '@/lib/authRedirect';
 
 export const SettingsPage = () => {
   const { signOut } = useClerk();
@@ -88,6 +89,7 @@ export const SettingsPage = () => {
   const handleSignOut = async () => {
     try {
       await signOut(() => {
+        clearAuthFlowState();
         navigate('/');
       });
     } catch (error) {
