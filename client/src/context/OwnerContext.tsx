@@ -428,12 +428,11 @@ const defaultTransactions: WalletTransaction[] = [
 ];
 
 const defaultRewards: Reward[] = [
-  { id: 'rw_1', businessId: 'b_lucknow_cafe', type: 'COINS', label: '10 Eddy Coins', value: 10, probability: 0.35 },
-  { id: 'rw_2', businessId: 'b_lucknow_cafe', type: 'COINS', label: '25 Eddy Coins', value: 25, probability: 0.20 },
-  { id: 'rw_3', businessId: 'b_lucknow_cafe', type: 'DISCOUNT', label: '15% Off Coupon', value: 15, probability: 0.25 },
-  { id: 'rw_4', businessId: 'b_lucknow_cafe', type: 'FREE_ITEM', label: 'Free Masala Bun', value: 40, probability: 0.10 },
-  { id: 'rw_5', businessId: 'b_lucknow_cafe', type: 'COINS', label: '50 Mega Coins', value: 50, probability: 0.08 },
-  { id: 'rw_6', businessId: 'b_lucknow_cafe', type: 'OTHER', label: 'Better Luck Next Time', value: 0, probability: 0.02 },
+  { id: 'rw_1', businessId: 'b_lucknow_cafe', type: 'COINS', label: '2 Eddy Coins', value: 2, probability: 0.50 },
+  { id: 'rw_2', businessId: 'b_lucknow_cafe', type: 'COINS', label: '3 Eddy Coins', value: 3, probability: 0.30 },
+  { id: 'rw_3', businessId: 'b_lucknow_cafe', type: 'COINS', label: '4 Eddy Coins', value: 4, probability: 0.10 },
+  { id: 'rw_4', businessId: 'b_lucknow_cafe', type: 'COINS', label: '5 Eddy Coins', value: 5, probability: 0.07 },
+  { id: 'rw_5', businessId: 'b_lucknow_cafe', type: 'COINS', label: '10 Eddy Coins', value: 10, probability: 0.03 },
 ];
 
 const defaultSocialAccounts = {
