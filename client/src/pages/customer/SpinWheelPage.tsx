@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Coins, RefreshCcw, Sparkles, Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -23,9 +23,29 @@ export const SpinWheelPage = () => {
   const [searchParams] = useSearchParams();
   const scanId = searchParams.get('scanId');
   const [result, setResult] = useState<SpinResponse | null>(null);
+  const [pendingResult, setPendingResult] = useState<SpinResponse | null>(null);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [requestFailed, setRequestFailed] = useState(false);
+  const animationTimeout = useRef<number | null>(null);
+
+  const finishSpin = (spinResult: SpinResponse) => {
+    if (animationTimeout.current !== null) {
+      window.clearTimeout(animationTimeout.current);
+      animationTimeout.current = null;
+    }
+    setResult(spinResult);
+    setPendingResult(null);
+    setSpinning(false);
+    notifyWalletUpdated();
+    toast.success(spinResult.message);
+  };
+
+  useEffect(() => () => {
+    if (animationTimeout.current !== null) {
+      window.clearTimeout(animationTimeout.current);
+    }
+  }, []);
 
   const handleSpin = async () => {
     if (!scanId || spinning || result) return;
@@ -44,11 +64,9 @@ export const SpinWheelPage = () => {
         throw new Error('The server returned an unsupported reward result.');
       }
 
-      setResult(spinResult);
+      setPendingResult(spinResult);
       setRotation(5 * 360 + (360 - selectedReward.center));
-      notifyWalletUpdated();
-      toast.success(spinResult.message);
-      window.setTimeout(() => setSpinning(false), 3100);
+      animationTimeout.current = window.setTimeout(() => finishSpin(spinResult), 3200);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'The spin could not be completed.';
       console.error('Spin request failed:', error);
@@ -82,6 +100,11 @@ export const SpinWheelPage = () => {
               style={{
                 transform: `rotate(${rotation}deg)`,
                 background: wheelGradient,
+              }}
+              onTransitionEnd={(event) => {
+                if (event.propertyName === 'transform' && pendingResult) {
+                  finishSpin(pendingResult);
+                }
               }}
               aria-label="Reward wheel"
             >
