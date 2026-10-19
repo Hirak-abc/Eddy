@@ -168,11 +168,13 @@ const OwnerHeader = ({
 };
 
 const OwnerWorkspace = () => {
+  const { business } = useOwner();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [savedBusiness, setSavedBusiness] = useState<OwnerBusiness | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const location = useLocation();
+  const sidebarBusinessName = savedBusiness ? business.name : '';
 
   const loadSavedBusiness = useCallback(async () => {
     setProfileLoading(true);
@@ -197,7 +199,7 @@ const OwnerWorkspace = () => {
     <div className="min-h-screen bg-slate-50 flex flex-row dark:bg-slate-950">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
-        <Sidebar businessName={savedBusiness?.name ?? ''} />
+        <Sidebar businessName={sidebarBusinessName} />
       </div>
 
       {/* Mobile Drawer Overlay */}
@@ -210,7 +212,7 @@ const OwnerWorkspace = () => {
           <div className="relative z-10 flex">
             <Sidebar
               isMobile
-              businessName={savedBusiness?.name ?? ''}
+              businessName={sidebarBusinessName}
               onCloseMobile={() => setMobileMenuOpen(false)}
             />
             <button
