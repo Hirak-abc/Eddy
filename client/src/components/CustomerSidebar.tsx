@@ -18,7 +18,7 @@ const navItems: {
   { name: 'Wallet', path: '/customer/wallet', icon: Wallet },
   { name: 'History', path: '/customer/history', icon: History },
   { name: 'Coupons', path: '/customer/coupons', icon: Ticket },
-  { name: 'Following', path: '/customer/following', icon: UserCheck },
+  { name: 'Following', path: '/customer/following', icon: UserCheck, badge: 'Soon' },
   { name: 'Streak', path: '/customer/streak', icon: Zap, badge: 'Soon' },
   { name: 'Reviews', path: '/customer/review-rating', icon: Star, badge: 'Soon' },
   { name: 'Settings', path: '/customer/settings', icon: Settings },
