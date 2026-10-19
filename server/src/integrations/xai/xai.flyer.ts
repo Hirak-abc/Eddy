@@ -124,7 +124,7 @@ const generateBrief = async (input: FlyerGenerationInput) => {
   const prompt =
     input.kind === "AUTOMATIC"
       ? `Search the live web for a currently trending meme or social-media trend in India that is suitable for a small business advertisement. Pick one current, India-relevant trend and cite it in the topic field. Do not invent trend facts.`
-      : `Search the live web for current, India-relevant information and meme references suitable for a small-business flyer about: "${input.topic}". Use this requested topic as the subject; do not replace it with an unrelated trend.`;
+      : `Search the live web for a currently trending meme or social-media trend in India that is suitable for a small-business flyer about: "${input.topic}". Pick a current, India-relevant trend that is directly relevant to this requested topic. Keep the requested topic as the flyer's subject and do not replace it with an unrelated trend. Cite the trend in the topic field. Do not invent trend facts.`;
   const language = {
     HINDI: "Hindi written in Devanagari",
     ENGLISH: "English",

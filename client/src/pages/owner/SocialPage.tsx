@@ -210,13 +210,7 @@ export const SocialPage = () => {
                     <Copy size={12} /> Copy hashtag set
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-400">Followers</span>
-                    <strong className="font-mono text-base font-black text-slate-900">
-                      {socialAccounts.instagram.followers?.toLocaleString('en-IN')}
-                    </strong>
-                  </div>
+                <div className="grid grid-cols-1 gap-3 text-xs">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <span className="block text-[10px] font-semibold uppercase text-slate-400">Token Health</span>
                     <strong className="font-mono text-base font-black text-emerald-600">
@@ -312,13 +306,7 @@ export const SocialPage = () => {
                     <Copy size={12} /> Copy test caption
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                    <span className="block text-[10px] font-semibold uppercase text-slate-400">Page Likes</span>
-                    <strong className="font-mono text-base font-black text-slate-900">
-                      {socialAccounts.facebook.likes?.toLocaleString('en-IN')}
-                    </strong>
-                  </div>
+                <div className="grid grid-cols-1 gap-3 text-xs">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <span className="block text-[10px] font-semibold uppercase text-slate-400">Token Health</span>
                     <strong className="font-mono text-base font-black text-emerald-600">

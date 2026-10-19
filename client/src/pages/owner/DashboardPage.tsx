@@ -272,11 +272,11 @@ export const DashboardPage = () => {
                     <div className="text-xs font-bold text-slate-900 dark:text-white">
                       {socialAccounts.instagram.connected ? socialAccounts.instagram.username || 'Instagram account' : 'Instagram'}
                     </div>
-                    <div className="text-[11px] text-slate-500 font-mono">
-                      {socialAccounts.instagram.connected
-                        ? `${(socialAccounts.instagram.followers ?? 0).toLocaleString('en-IN')} followers`
-                        : 'Connect an account to get started'}
-                    </div>
+                    {!socialAccounts.instagram.connected && (
+                      <div className="text-[11px] text-slate-500 font-mono">
+                        Connect an account to get started
+                      </div>
+                    )}
                   </div>
                 </div>
                 <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${
@@ -298,11 +298,11 @@ export const DashboardPage = () => {
                     <div className="truncate text-xs font-bold text-slate-900 dark:text-white">
                       {socialAccounts.facebook.connected ? socialAccounts.facebook.pageName || 'Facebook page' : 'Facebook'}
                     </div>
-                    <div className="text-[11px] text-slate-500 font-mono">
-                      {socialAccounts.facebook.connected
-                        ? `${(socialAccounts.facebook.likes ?? 0).toLocaleString('en-IN')} likes`
-                        : 'Connect a page to get started'}
-                    </div>
+                    {!socialAccounts.facebook.connected && (
+                      <div className="text-[11px] text-slate-500 font-mono">
+                        Connect a page to get started
+                      </div>
+                    )}
                   </div>
                 </div>
                 <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${
