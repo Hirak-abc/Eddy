@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("xAI flyer generation integration", () => {
-  it("uses xAI web search and Imagine edits, then overlays the coupon code", async () => {
+  it("uses a topic-relevant Indian trend for custom flyers", async () => {
     const sourceImage = await sharp({
       create: {
         width: 320,
@@ -59,8 +59,8 @@ describe("xAI flyer generation integration", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await XAI_FLYER_CLIENT.generate({
-      kind: "AUTOMATIC",
-      topic: "Latest Indian meme",
+      kind: "CUSTOM",
+      topic: "Diwali cafe promotions",
       language: "HINGLISH",
       businessName: "Local Cafe",
       businessCategory: "Cafe",
@@ -92,6 +92,12 @@ describe("xAI flyer generation integration", () => {
       model: "grok-4.7",
       tools: [{ type: "web_search" }],
     });
+    expect(JSON.parse(String(searchInit.body)).input[0].content).toContain(
+      'currently trending meme or social-media trend in India that is suitable for a small-business flyer about: "Diwali cafe promotions"',
+    );
+    expect(JSON.parse(String(searchInit.body)).input[0].content).toContain(
+      "directly relevant to this requested topic",
+    );
 
     const [imageUrl, imageInit] = fetchMock.mock.calls[1] as [
       string,
