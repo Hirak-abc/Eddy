@@ -59,6 +59,40 @@ export const QR_CONTROLLER = {
     }
   },
 
+  ownerToday: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const token = req.authToken;
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+      }
+      const result = await QR_SERVICE.getOwnerScansCountToday(token);
+      return res.status(200).json({ success: true, data: result, error: null });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  ownerRepeatRate: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const token = req.authToken;
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+      }
+      const result = await QR_SERVICE.getOwnerRepeatRate(token);
+      return res.status(200).json({ success: true, data: result, error: null });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
   resolve: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await QR_SERVICE.resolveQr(req.params.qrToken);

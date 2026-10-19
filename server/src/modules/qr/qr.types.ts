@@ -14,6 +14,17 @@ export interface QrStatusResult {
   scansLeft: number;
 }
 
+export interface OwnerQrScanCount {
+  scansToday: number;
+  date: string;
+}
+
+export interface OwnerRepeatRate {
+  repeatCustomerRate: number;
+  repeatCustomers: number;
+  uniqueCustomers: number;
+}
+
 export interface QrScanRecord {
   scanId: string;
   businessId: string;

@@ -990,13 +990,13 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const analyticsSummary = {
-    totalReach: 14280,
-    reachGrowth: 18.4,
-    totalScans: 842,
-    scanGrowth: 24.1,
-    couponsRedeemed: coupons.reduce((sum, c) => sum + c.redeemedCount, 0),
-    couponGrowth: 12.5,
-    repeatCustomerRate: 42.8,
+    totalReach: 0,
+    reachGrowth: 0,
+    totalScans: 0,
+    scanGrowth: 0,
+    couponsRedeemed: 0,
+    couponGrowth: 0,
+    repeatCustomerRate: 0,
   };
 
   const resetToDefaults = () => {

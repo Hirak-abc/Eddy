@@ -70,7 +70,8 @@ export default defineSchema({
     dateString: v.string(), // YYYY-MM-DD for daily limit counting
   })
     .index("by_customer_date", ["customerId", "dateString"])
-    .index("by_business", ["businessId"]),
+    .index("by_business", ["businessId"])
+    .index("by_business_scanned_at", ["businessId", "scannedAt"]),
 
   wallets: defineTable({
     customerId: v.string(),

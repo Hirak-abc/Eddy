@@ -3,6 +3,64 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes profile-color-blink {
+  0%, 100% {
+    background-color: #4f46e5;
+    border-color: #a5b4fc;
+    color: #ffffff;
+    box-shadow: 0 0 0 0 rgb(99 102 241 / 55%), 0 8px 24px rgb(79 70 229 / 30%);
+  }
+
+  50% {
+    background-color: #facc15;
+    border-color: #fde047;
+    color: #422006;
+    box-shadow: 0 0 0 5px rgb(250 204 21 / 20%), 0 8px 24px rgb(250 204 21 / 35%);
+  }
+}
+
+.profile-color-blink {
+  animation: profile-color-blink 1s steps(1, end) infinite;
+}
+
+.profile-color-blink > div {
+  animation: profile-color-blink-icon 1s steps(1, end) infinite;
+}
+
+.profile-color-blink > span {
+  animation: profile-color-blink-text 1s steps(1, end) infinite;
+}
+
+@keyframes profile-color-blink-icon {
+  0%, 100% {
+    background-color: #ffffff;
+    color: #4f46e5;
+  }
+
+  50% {
+    background-color: #422006;
+    color: #facc15;
+  }
+}
+
+@keyframes profile-color-blink-text {
+  0%, 100% {
+    color: #ffffff;
+  }
+
+  50% {
+    color: #422006;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-color-blink,
+  .profile-color-blink > div,
+  .profile-color-blink > span {
+    animation: none;
+  }
+}
+
 :root {
   color-scheme: light;
   --background: #f8fafc;
