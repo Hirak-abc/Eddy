@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 import {
   Menu,
@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
-  ChevronRight,
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -22,33 +21,23 @@ import {
   type OwnerBusiness,
 } from '../services/business.service';
 
-const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => {
-  const { business, toggleAutoPublish, transactions } = useOwner();
+const OwnerHeader = ({
+  onOpenMobileMenu,
+  savedBusiness,
+  profileLoading,
+  profileError,
+  onRetryProfile,
+}: {
+  onOpenMobileMenu: () => void;
+  savedBusiness: OwnerBusiness | null;
+  profileLoading: boolean;
+  profileError: string | null;
+  onRetryProfile: () => void;
+}) => {
+  const { business, toggleAutoPublish } = useOwner();
   const navigate = useNavigate();
-  const [savedBusiness, setSavedBusiness] = useState<OwnerBusiness | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState<string | null>(null);
-
-  const pendingRequests = transactions.filter((t) => t.status === 'PENDING');
-  const pendingAmount = pendingRequests.reduce((sum, t) => sum + t.amount, 0);
-
-  const loadSavedBusiness = useCallback(async () => {
-    const response = await businessService.getMine();
-    if (!response.success) {
-      setProfileError(response.error?.message ?? 'Could not load your shop profile.');
-      setProfileLoading(false);
-      return;
-    }
-    setSavedBusiness(response.data);
-    setProfileError(null);
-    setProfileLoading(false);
-  }, []);
-
-  useEffect(() => {
-    void loadSavedBusiness();
-    window.addEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
-    return () => window.removeEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
-  }, [loadSavedBusiness]);
+  const location = useLocation();
+  const isDashboard = location.pathname === ROUTES.OWNER_DASHBOARD;
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between shadow-xs dark:border-slate-800 dark:bg-slate-900/95">
@@ -95,16 +84,13 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
         ) : profileError ? (
           <Button
             variant="outline"
-            onClick={() => {
-              setProfileLoading(true);
-              void loadSavedBusiness();
-            }}
+            onClick={onRetryProfile}
             title={profileError}
             className="rounded-xl text-xs"
           >
             Retry profile
           </Button>
-        ) : (
+        ) : !isDashboard ? (
           <Link
             to={ROUTES.OWNER_SETTINGS}
             className="group flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
@@ -117,25 +103,11 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
               Set your profile
             </span>
           </Link>
-        )}
+        ) : null}
       </div>
 
-      {/* Right: Actions, Auto-Publish status, Pending Alert & Profile */}
+      {/* Right: Actions, Auto-Publish status & Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Pending Redemptions Banner if any */}
-        {pendingRequests.length > 0 && (
-          <Link
-            to={ROUTES.OWNER_WALLET}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-900 text-xs font-medium transition-colors animate-pulse"
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>
-              <strong>{pendingRequests.length}</strong> Pending Redemption{pendingRequests.length > 1 ? 's' : ''} (₹{pendingAmount})
-            </span>
-            <ChevronRight size={14} className="text-amber-600" />
-          </Link>
-        )}
-
         {/* Auto-Publish Pill Toggle */}
         <button
           onClick={() => toggleAutoPublish()}
@@ -195,57 +167,142 @@ const OwnerHeader = ({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) => 
   );
 };
 
-export const OwnerLayout = () => {
+const OwnerWorkspace = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [savedBusiness, setSavedBusiness] = useState<OwnerBusiness | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const location = useLocation();
+
+  const loadSavedBusiness = useCallback(async () => {
+    setProfileLoading(true);
+    const response = await businessService.getMine();
+    if (!response.success) {
+      setProfileError(response.error?.message ?? 'Could not load your shop profile.');
+      setProfileLoading(false);
+      return;
+    }
+    setSavedBusiness(response.data);
+    setProfileError(null);
+    setProfileLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadSavedBusiness();
+    window.addEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
+    return () => window.removeEventListener(BUSINESS_PROFILE_UPDATED_EVENT, loadSavedBusiness);
+  }, [loadSavedBusiness]);
 
   return (
-    <OwnerProvider>
-      <div className="min-h-screen bg-slate-50 flex flex-row dark:bg-slate-950">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
+    <div className="min-h-screen bg-slate-50 flex flex-row dark:bg-slate-950">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar businessName={savedBusiness?.name ?? ''} />
+      </div>
 
-        {/* Mobile Drawer Overlay */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex">
-            <div
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-              onClick={() => setMobileMenuOpen(false)}
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="relative z-10 flex">
+            <Sidebar
+              isMobile
+              businessName={savedBusiness?.name ?? ''}
+              onCloseMobile={() => setMobileMenuOpen(false)}
             />
-            <div className="relative z-10 flex">
-              <Sidebar isMobile onCloseMobile={() => setMobileMenuOpen(false)} />
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <OwnerHeader
+          onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          savedBusiness={savedBusiness}
+          profileLoading={profileLoading}
+          profileError={profileError}
+          onRetryProfile={() => void loadSavedBusiness()}
+        />
+        {!profileLoading &&
+          !profileError &&
+          !savedBusiness &&
+          location.pathname === ROUTES.OWNER_DASHBOARD && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 px-4 py-8 backdrop-blur-sm">
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="owner-profile-prompt-title"
+                className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 p-7 text-center text-white shadow-2xl shadow-indigo-950/50 sm:p-10"
               >
-                <X size={20} />
-              </button>
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-indigo-500/25 blur-3xl"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-24 -left-12 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl"
+                />
+                <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-indigo-200 shadow-lg shadow-indigo-950/30">
+                  <Store size={30} />
+                </div>
+                <p className="relative mt-6 text-xs font-extrabold uppercase tracking-[0.2em] text-indigo-200">
+                  Welcome to Eddy
+                </p>
+                <h1
+                  id="owner-profile-prompt-title"
+                  className="relative mt-2 text-2xl font-black tracking-tight sm:text-3xl"
+                >
+                  Set up your business profile
+                </h1>
+                <p className="relative mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-300">
+                  Add your shop name, category, and address to personalize your owner dashboard and get your shop ready for customers.
+                </p>
+                <Link
+                  to={ROUTES.OWNER_SETTINGS}
+                  className="profile-color-blink group relative mx-auto mt-7 flex min-h-14 w-full max-w-sm items-center justify-center gap-3 rounded-2xl border px-6 py-3 text-base font-extrabold shadow-lg transition-transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-yellow-300/50"
+                >
+                  <Store size={20} />
+                  <span>Set your profile</span>
+                  <Sparkles size={18} />
+                </Link>
+                <p className="relative mt-4 text-xs font-medium text-slate-400">
+                  Your shop name will appear here once your profile is saved.
+                </p>
+              </section>
+            </div>
+          )}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          <Outlet />
+        </main>
+        <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-xs text-slate-400 sm:flex-row">
+            <p>© 2026 Eddy · Marketing for local businesses</p>
+            <div className="flex items-center gap-4">
+              <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="font-semibold text-slate-500 hover:text-indigo-600">
+                Terms of Service
+              </Link>
             </div>
           </div>
-        )}
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <OwnerHeader onOpenMobileMenu={() => setMobileMenuOpen(true)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-            <Outlet />
-          </main>
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
-            <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-xs text-slate-400 sm:flex-row">
-              <p>© 2026 Eddy · Marketing for local businesses</p>
-              <div className="flex items-center gap-4">
-                <Link to="/privacy" className="font-semibold text-slate-500 hover:text-indigo-600">
-                  Privacy Policy
-                </Link>
-                <Link to="/terms" className="font-semibold text-slate-500 hover:text-indigo-600">
-                  Terms of Service
-                </Link>
-              </div>
-            </div>
-          </footer>
-        </div>
+        </footer>
       </div>
-    </OwnerProvider>
+    </div>
   );
 };
+
+export const OwnerLayout = () => (
+  <OwnerProvider>
+    <OwnerWorkspace />
+  </OwnerProvider>
+);

@@ -6,6 +6,8 @@ vi.mock('../modules/qr/qr.repository', () => ({
   QR_REPOSITORY: {
     recordScan: vi.fn(),
     getScansCountToday: vi.fn(),
+    getOwnerScansCountToday: vi.fn(),
+    getOwnerRepeatRate: vi.fn(),
     resolveQr: vi.fn(),
   },
 }));
@@ -65,5 +67,33 @@ describe('QR_SERVICE', () => {
 
     const status = await QR_SERVICE.getScanStatus('session-token');
     expect(status).toEqual({ scansToday: 10, scansLeft: 90 });
+  });
+
+  it('returns the owner business scan count for today', async () => {
+    vi.mocked(QR_REPOSITORY.getOwnerScansCountToday).mockResolvedValueOnce({
+      scansToday: 12,
+      date: '2026-10-19',
+    });
+
+    await expect(QR_SERVICE.getOwnerScansCountToday('session-token')).resolves.toEqual({
+      scansToday: 12,
+      date: '2026-10-19',
+    });
+    expect(QR_REPOSITORY.getOwnerScansCountToday).toHaveBeenCalledWith('session-token');
+  });
+
+  it('returns the owner repeat customer rate for the last 30 days', async () => {
+    vi.mocked(QR_REPOSITORY.getOwnerRepeatRate).mockResolvedValueOnce({
+      repeatCustomerRate: 40,
+      repeatCustomers: 2,
+      uniqueCustomers: 5,
+    });
+
+    await expect(QR_SERVICE.getOwnerRepeatRate('session-token')).resolves.toEqual({
+      repeatCustomerRate: 40,
+      repeatCustomers: 2,
+      uniqueCustomers: 5,
+    });
+    expect(QR_REPOSITORY.getOwnerRepeatRate).toHaveBeenCalledWith('session-token');
   });
 });

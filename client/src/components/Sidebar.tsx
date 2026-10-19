@@ -34,10 +34,18 @@ interface NavSection {
   }[];
 }
 
-export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolean; onCloseMobile?: () => void }) => {
+export const Sidebar = ({
+  isMobile = false,
+  onCloseMobile,
+  businessName,
+}: {
+  isMobile?: boolean;
+  onCloseMobile?: () => void;
+  businessName?: string;
+}) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { transactions, trendFlyer, business } = useOwner();
+  const { transactions, trendFlyer } = useOwner();
 
   const pendingCount = transactions.filter((t) => t.status === 'PENDING').length;
 
@@ -179,9 +187,11 @@ export const Sidebar = ({ isMobile = false, onCloseMobile }: { isMobile?: boolea
                   Owner
                 </span>
               </div>
-              <span className="text-xs text-slate-400 truncate max-w-[140px]">
-                {business?.name || 'Local Business'}
-              </span>
+              {businessName && (
+                <span className="text-xs text-slate-400 truncate max-w-[140px]">
+                  {businessName}
+                </span>
+              )}
             </div>
           )}
         </Link>

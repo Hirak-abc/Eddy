@@ -1,5 +1,10 @@
 import { QR_REPOSITORY } from './qr.repository';
-import type { QrScanResult, QrStatusResult } from './qr.types';
+import type {
+  OwnerQrScanCount,
+  OwnerRepeatRate,
+  QrScanResult,
+  QrStatusResult,
+} from './qr.types';
 import { QR_RULES } from '../../config/constants';
 
 export const QR_SERVICE = {
@@ -39,6 +44,12 @@ export const QR_SERVICE = {
 
   getScanStatus: async (token: string): Promise<QrStatusResult> =>
     await QR_REPOSITORY.getScansCountToday(token),
+
+  getOwnerScansCountToday: async (token: string): Promise<OwnerQrScanCount> =>
+    await QR_REPOSITORY.getOwnerScansCountToday(token),
+
+  getOwnerRepeatRate: async (token: string): Promise<OwnerRepeatRate> =>
+    await QR_REPOSITORY.getOwnerRepeatRate(token),
 
   resolveQr: (qrToken: string) => QR_REPOSITORY.resolveQr(qrToken),
 };
