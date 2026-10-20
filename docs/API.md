@@ -41,6 +41,31 @@ Removes the image from Convex Storage and deletes its slot reference. Saving
 all three slots from the owner profile queues an automatic flyer; it no longer
 publishes a raw photo.
 
+## Social Accounts
+
+Facebook and Instagram connections are owner-specific. Each owner connects
+through Meta OAuth; server-wide page or Instagram tokens do not appear as
+connected accounts for users.
+
+Use `GET /api/social/meta/connect` to start OAuth, then manage the authenticated
+owner's accounts with `GET /api/social/accounts`. Disconnect an account with
+`DELETE /api/social/accounts/{id}`. After disconnecting, the owner can reconnect
+through Meta OAuth. If configured, a server-managed Instagram account is also
+shown to owners and used for Instagram publishing; it cannot be disconnected
+from an individual owner session.
+
+Meta OAuth requests `business_management` in addition to the Page permissions so
+Eddy can find Pages assigned through a Business portfolio, not only Pages
+returned by `/me/accounts`. That permission must be enabled for the Meta app and
+granted during the owner's next Facebook reconnection.
+
+When Meta OAuth returns multiple Facebook Pages, the Social Media Integrations
+page lets the owner choose which Page Eddy uses for Facebook publishing. The
+selection is saved per owner and does not change the Instagram publishing
+account. Select a Page with `PATCH /api/social/accounts/{id}` and body
+`{"isSelected":true}`; the same endpoint continues to accept
+`{"autoPublish":true}` or `{"autoPublish":false}` for publishing preferences.
+
 ## Flyers
 
 Flyer generation and publishing endpoints require an owner token. Flyer jobs

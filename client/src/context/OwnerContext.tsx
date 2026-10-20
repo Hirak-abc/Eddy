@@ -102,7 +102,9 @@ export interface OwnerContextType {
     instagram: SocialAccountState;
     facebook: SocialAccountState;
   };
+  socialFacebookPages: SocialAccount[];
   toggleSocialConnection: (platform: 'instagram' | 'facebook') => Promise<void>;
+  selectFacebookPage: (accountId: string) => Promise<void>;
   updateSocialAutoPublish: (platform: 'instagram' | 'facebook', autoPublish: boolean) => void;
 
   // Reviews
@@ -633,7 +635,7 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return defaultSocialAccounts;
     }
   });
-
+  const [socialFacebookPages, setSocialFacebookPages] = useState<SocialAccount[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_reviews`);
@@ -768,31 +770,40 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const ig = accounts.find(
       (account) => account.platform === 'INSTAGRAM' && account.status === 'ACTIVE',
     );
-    const fb = accounts.find(
+    const facebookPages = accounts.filter(
       (account) => account.platform === 'FACEBOOK_PAGE' && account.status === 'ACTIVE',
     );
+    const fb =
+      facebookPages.find((account) => account.isSelected) ?? facebookPages[0];
+    const selectedFacebookPages = facebookPages.map((account) => ({
+      ...account,
+      isSelected: account.id === fb?.id,
+    }));
     const syncAt = new Date().toISOString();
     return {
-      instagram: {
-        id: ig?.id,
-        connected: Boolean(ig),
-        username: ig?.username
-          ? `@${ig.username.replace(/^@/, '')}`
-          : '@eddyofficial_01',
-        followers: ig ? 0 : undefined,
-        lastSync: syncAt,
-        tokenExpiresDays: tokenDaysRemaining(ig?.tokenExpiresAt) ?? 60,
-        autoPublish: ig?.autoPublish ?? true,
+      socialAccounts: {
+        instagram: {
+          id: ig?.id,
+          connected: Boolean(ig),
+          username: ig?.username
+            ? `@${ig.username.replace(/^@/, '')}`
+            : '@eddyofficial_01',
+          followers: ig ? 0 : undefined,
+          lastSync: syncAt,
+          tokenExpiresDays: tokenDaysRemaining(ig?.tokenExpiresAt) ?? 60,
+          autoPublish: ig?.autoPublish ?? true,
+        },
+        facebook: {
+          id: fb?.id,
+          connected: Boolean(fb),
+          pageName: fb?.name || 'EddyOfficial',
+          likes: fb ? 0 : undefined,
+          lastSync: syncAt,
+          tokenExpiresDays: tokenDaysRemaining(fb?.tokenExpiresAt) ?? 60,
+          autoPublish: fb?.autoPublish ?? true,
+        },
       },
-      facebook: {
-        id: fb?.id,
-        connected: Boolean(fb),
-        pageName: fb?.name || 'EddyOfficial',
-        likes: fb ? 0 : undefined,
-        lastSync: syncAt,
-        tokenExpiresDays: tokenDaysRemaining(fb?.tokenExpiresAt) ?? 60,
-        autoPublish: fb?.autoPublish ?? true,
-      },
+      facebookPages: selectedFacebookPages,
     };
   };
 
@@ -801,7 +812,9 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!response.success || !response.data?.accounts) {
       return;
     }
-    setSocialAccounts(mapApiAccounts(response.data.accounts));
+    const mapped = mapApiAccounts(response.data.accounts);
+    setSocialAccounts(mapped.socialAccounts);
+    setSocialFacebookPages(mapped.facebookPages);
   }, []);
 
   useEffect(() => {
@@ -923,26 +936,13 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleSocialConnection = async (platform: 'instagram' | 'facebook') => {
     const current = socialAccounts[platform];
     if (current.connected) {
-      if (current.id?.startsWith('env:')) {
-        throw new Error(
-          'EddyOfficial and eddyofficial_01 are configured with server Meta tokens and cannot be disconnected in the UI.',
-        );
-      }
       if (current.id) {
         const response = await socialService.disconnect(current.id);
         if (!response.success) {
           throw new Error(response.error?.message || 'Failed to disconnect account.');
         }
       }
-      setSocialAccounts((prev) => ({
-        ...prev,
-        [platform]: {
-          ...prev[platform],
-          id: undefined,
-          connected: false,
-          lastSync: new Date().toISOString(),
-        },
-      }));
+      await refreshSocialAccounts();
       return;
     }
 
@@ -953,13 +953,21 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     throw new Error(
       response.error?.message ||
-        'Meta OAuth is not configured. Server tokens still publish to EddyOfficial and eddyofficial_01.',
+        'Meta account connection is unavailable. Please try again later.',
     );
+  };
+
+  const selectFacebookPage = async (accountId: string) => {
+    const response = await socialService.selectFacebookPage(accountId);
+    if (!response.success) {
+      throw new Error(response.error?.message || 'Failed to select Facebook Page.');
+    }
+    await refreshSocialAccounts();
   };
 
   const updateSocialAutoPublish = (platform: 'instagram' | 'facebook', autoPublish: boolean) => {
     const accountId = socialAccounts[platform].id;
-    if (accountId && !accountId.startsWith('env:')) {
+    if (accountId) {
       void socialService.updateAutoPublish(accountId, autoPublish);
     }
     setSocialAccounts((prev) => ({
@@ -1046,7 +1054,9 @@ export const OwnerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dailyScanBonusCoins,
         setDailyScanBonusCoins,
         socialAccounts,
+        socialFacebookPages,
         toggleSocialConnection,
+        selectFacebookPage,
         updateSocialAutoPublish,
         reviews,
         reviewStats,

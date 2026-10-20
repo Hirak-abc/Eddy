@@ -22,12 +22,20 @@ export const listAccountsByClerkId = query({
       .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", args.clerkUserId))
       .collect();
 
-    return accounts
-      .filter((account) => account.status === "ACTIVE")
-      .map(({ encryptedAccessToken: _token, ...safe }) => ({
-        ...safe,
-        id: safe._id,
-      }));
+    const active = accounts.filter((account) => account.status === "ACTIVE");
+    const facebookPages = active.filter(
+      (account) => account.platform === "FACEBOOK_PAGE",
+    );
+    const selectedFacebookPage =
+      facebookPages.find((account) => account.isSelected) ?? facebookPages[0];
+
+    return active.map(({ encryptedAccessToken: _token, ...safe }) => ({
+      ...safe,
+      isSelected:
+        safe.platform === "FACEBOOK_PAGE" &&
+        safe._id === selectedFacebookPage?._id,
+      id: safe._id,
+    }));
   },
 });
 
@@ -136,6 +144,39 @@ export const updateAccount = mutation({
         : {}),
       updatedAt: new Date().toISOString(),
     });
+    return args.id;
+  },
+});
+
+export const selectFacebookAccount = mutation({
+  args: {
+    id: v.id("socialAccounts"),
+    clerkUserId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const target = await ctx.db.get(args.id);
+    if (
+      !target ||
+      target.clerkUserId !== args.clerkUserId ||
+      target.platform !== "FACEBOOK_PAGE" ||
+      target.status !== "ACTIVE"
+    ) {
+      throw new Error("SOCIAL_ACCOUNT_NOT_FOUND");
+    }
+
+    const accounts = await ctx.db
+      .query("socialAccounts")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .collect();
+    const now = new Date().toISOString();
+    for (const account of accounts) {
+      if (account.platform === "FACEBOOK_PAGE") {
+        await ctx.db.patch(account._id, {
+          isSelected: account._id === args.id,
+          updatedAt: now,
+        });
+      }
+    }
     return args.id;
   },
 });

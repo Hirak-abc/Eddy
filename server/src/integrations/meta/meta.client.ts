@@ -7,8 +7,10 @@ const insecureTls =
   (process.env.NODE_ENV || config.NODE_ENV || 'development') === 'development';
 
 const httpsAgent = insecureTls
-  ? new https.Agent({ rejectUnauthorized: false })
-  : undefined;
+  ? new https.Agent({ family: 4, keepAlive: true, rejectUnauthorized: false })
+  : new https.Agent({ family: 4, keepAlive: true });
+
+const META_REQUEST_TIMEOUT_MS = 20_000;
 
 const graphVersion = () => config.META_GRAPH_API_VERSION || 'v21.0';
 const instagramGraphVersion = () =>
@@ -63,6 +65,7 @@ export const metaGet = async <T>(
   try {
     const response = await axios.get<T>(`${hostBaseUrl(host)}${path}`, {
       httpsAgent,
+      timeout: META_REQUEST_TIMEOUT_MS,
       params: Object.fromEntries(
         Object.entries(params).filter(([, value]) => value !== undefined),
       ),
@@ -81,6 +84,7 @@ export const metaPost = async <T>(
   try {
     const response = await axios.post<T>(`${hostBaseUrl(host)}${path}`, undefined, {
       httpsAgent,
+      timeout: META_REQUEST_TIMEOUT_MS,
       params: Object.fromEntries(
         Object.entries(body).filter(([, value]) => value !== undefined),
       ),

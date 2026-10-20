@@ -36,6 +36,7 @@ export interface SocialAccountRecord {
   encryptedAccessToken?: string;
   tokenExpiresAt?: number;
   autoPublish: boolean;
+  isSelected?: boolean;
   status: SocialAccountStatus;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +50,7 @@ export interface SocialAccountPublic {
   username?: string;
   tokenExpiresAt?: number;
   autoPublish: boolean;
+  isSelected?: boolean;
   status: SocialAccountStatus;
 }
 

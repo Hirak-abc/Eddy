@@ -123,6 +123,7 @@ export default defineSchema({
     encryptedAccessToken: v.optional(v.string()),
     tokenExpiresAt: v.optional(v.number()),
     autoPublish: v.boolean(),
+    isSelected: v.optional(v.boolean()),
     status: v.union(v.literal("ACTIVE"), v.literal("DISCONNECTED")),
     createdAt: v.string(),
     updatedAt: v.string(),

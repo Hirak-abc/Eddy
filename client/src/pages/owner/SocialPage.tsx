@@ -21,8 +21,14 @@ const SAMPLE_CAPTION =
   'Celebrate this festive season at The Royal Chai and Cafe, Hazratganj. Flat 20% OFF festive combos with code NAVRATRI20. Valid 96 hours.';
 
 export const SocialPage = () => {
-  const { socialAccounts, toggleSocialConnection, updateSocialAutoPublish, refreshSocialAccounts } =
-    useOwner();
+  const {
+    socialAccounts,
+    socialFacebookPages,
+    toggleSocialConnection,
+    selectFacebookPage,
+    updateSocialAutoPublish,
+    refreshSocialAccounts,
+  } = useOwner();
 
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [autoHashtags, setAutoHashtags] = useState(true);
@@ -32,6 +38,7 @@ export const SocialPage = () => {
   const [showCaptionModal, setShowCaptionModal] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectingFacebookPage, setSelectingFacebookPage] = useState(false);
 
   const handleToggleConnection = async (platform: 'instagram' | 'facebook') => {
     const isCurrentlyConnected = socialAccounts[platform].connected;
@@ -58,6 +65,18 @@ export const SocialPage = () => {
       toast.error('Could not refresh Meta accounts.');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleSelectFacebookPage = async (accountId: string) => {
+    setSelectingFacebookPage(true);
+    try {
+      await selectFacebookPage(accountId);
+      toast.success('Facebook Page selected for publishing.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not select Facebook Page.');
+    } finally {
+      setSelectingFacebookPage(false);
     }
   };
 
@@ -259,7 +278,7 @@ export const SocialPage = () => {
               {isConnecting === 'instagram'
                 ? 'Connecting via Meta...'
                 : socialAccounts.instagram.id?.startsWith('env:')
-                  ? 'Connected (server tokens)'
+                  ? 'Connected (server account)'
                   : socialAccounts.instagram.connected
                     ? 'Disconnect Instagram'
                     : 'Connect Instagram Business'}
@@ -306,6 +325,34 @@ export const SocialPage = () => {
                     <Copy size={12} /> Copy test caption
                   </button>
                 </div>
+                {socialFacebookPages.length > 1 && (
+                  <div className="space-y-2 rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
+                    <label
+                      htmlFor="facebook-page-selection"
+                      className="block text-xs font-bold text-blue-950"
+                    >
+                      Facebook Page used for publishing
+                    </label>
+                    <select
+                      id="facebook-page-selection"
+                      value={socialAccounts.facebook.id ?? ''}
+                      disabled={selectingFacebookPage}
+                      onChange={(event) => {
+                        void handleSelectFacebookPage(event.target.value);
+                      }}
+                      className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs text-slate-800"
+                    >
+                      {socialFacebookPages.map((page) => (
+                        <option key={page.id} value={page.id}>
+                          {page.name || page.username || 'Facebook Page'}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-blue-800">
+                      Only this Facebook Page is used. Instagram publishing is unchanged.
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 gap-3 text-xs">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                     <span className="block text-[10px] font-semibold uppercase text-slate-400">Token Health</span>
@@ -342,10 +389,7 @@ export const SocialPage = () => {
           <div className="border-t border-slate-100 pt-4">
             <Button
               onClick={() => handleToggleConnection('facebook')}
-              disabled={
-                isConnecting === 'facebook' ||
-                Boolean(socialAccounts.facebook.id?.startsWith('env:'))
-              }
+              disabled={isConnecting === 'facebook'}
               className={`w-full rounded-xl py-2.5 text-xs font-bold ${
                 socialAccounts.facebook.connected
                   ? 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
@@ -354,11 +398,9 @@ export const SocialPage = () => {
             >
               {isConnecting === 'facebook'
                 ? 'Connecting via Meta...'
-                : socialAccounts.facebook.id?.startsWith('env:')
-                  ? 'Connected (server tokens)'
-                  : socialAccounts.facebook.connected
-                    ? 'Disconnect Facebook'
-                    : 'Connect Facebook Page'}
+                : socialAccounts.facebook.connected
+                  ? 'Disconnect Facebook'
+                  : 'Connect Facebook Page'}
             </Button>
           </div>
         </div>

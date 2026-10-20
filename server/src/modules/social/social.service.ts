@@ -110,22 +110,57 @@ const assertMetaPublishingConfigured = () => {
   }
 };
 
-const mergePublishAccounts = (
+const mergeInstagramFallback = (
   stored: SocialAccountRecord[],
   clerkUserId: string,
 ): SocialAccountRecord[] => {
-  const envAccounts = getEnvFallbackAccounts(clerkUserId);
-  const merged = [...stored];
-  for (const envAccount of envAccounts) {
-    const exists = stored.some(
-      (account) =>
-        account.platform === envAccount.platform &&
-        account.externalId === envAccount.externalId &&
-        account.status === 'ACTIVE',
-    );
-    if (!exists) merged.push(envAccount);
-  }
-  return merged;
+  const fallback = getEnvFallbackAccounts(clerkUserId);
+  return [
+    ...fallback,
+    ...stored.filter(
+      (saved) =>
+        !fallback.some(
+          (account) =>
+            saved.platform === account.platform &&
+            saved.externalId === account.externalId,
+        ),
+    ),
+  ];
+};
+
+const withFacebookPageSelection = (
+  accounts: SocialAccountRecord[],
+): SocialAccountRecord[] => {
+  const activePages = accounts.filter(
+    (account) =>
+      account.platform === 'FACEBOOK_PAGE' && account.status === 'ACTIVE',
+  );
+  const selected = activePages.find((account) => account.isSelected) ?? activePages[0];
+  return accounts.map((account) =>
+    account.platform === 'FACEBOOK_PAGE'
+      ? { ...account, isSelected: account.id === selected?.id }
+      : account,
+  );
+};
+
+const selectedFacebookPage = (
+  accounts: SocialAccountRecord[],
+): SocialAccountRecord | undefined =>
+  withFacebookPageSelection(accounts).find(
+    (account) =>
+      account.platform === 'FACEBOOK_PAGE' &&
+      account.status === 'ACTIVE' &&
+      account.isSelected,
+  );
+
+const restrictToSelectedFacebookPage = (
+  accounts: SocialAccountRecord[],
+): SocialAccountRecord[] => {
+  const selectedPage = selectedFacebookPage(accounts);
+  return accounts.filter(
+    (account) =>
+      account.platform !== 'FACEBOOK_PAGE' || account.id === selectedPage?.id,
+  );
 };
 
 const toPublicAccount = (account: SocialAccountRecord): SocialAccountPublic => ({
@@ -136,6 +171,7 @@ const toPublicAccount = (account: SocialAccountRecord): SocialAccountPublic => (
   username: account.username,
   tokenExpiresAt: account.tokenExpiresAt,
   autoPublish: account.autoPublish,
+  isSelected: account.isSelected,
   status: account.status,
 });
 
@@ -152,19 +188,8 @@ const encryptToken = (token: string): string => {
 };
 
 const decryptToken = (payload?: string): string => {
-  if (payload === 'env:META_PAGE_ACCESS_TOKEN') {
-    const token = process.env.META_PAGE_ACCESS_TOKEN || config.META_PAGE_ACCESS_TOKEN;
-    if (!token) {
-      throw new AppError(
-        ERROR_CODES.META_NOT_CONFIGURED,
-        'META_PAGE_ACCESS_TOKEN is not configured.',
-        503,
-      );
-    }
-    return token;
-  }
   if (payload === 'env:META_IG_ACCESS_TOKEN') {
-    const token = process.env.META_IG_ACCESS_TOKEN || config.META_IG_ACCESS_TOKEN;
+    const token = config.META_IG_ACCESS_TOKEN;
     if (!token) {
       throw new AppError(
         ERROR_CODES.META_NOT_CONFIGURED,
@@ -234,7 +259,7 @@ export const SOCIAL_SERVICE = {
         return clientRedirect({
           meta: 'error',
           message:
-            'No Facebook Pages were returned. Connect a Page you manage, with a linked Instagram professional account if you want IG publishing.',
+            'Meta did not return any Facebook Pages for this profile. Confirm this Facebook profile has Page access, grant Eddy pages_show_list, and enable the business_management permission for the Eddy Meta app so Eddy can find Pages assigned through a Business portfolio.',
         });
       }
 
@@ -266,7 +291,9 @@ export const SOCIAL_SERVICE = {
 
   listAccounts: async (clerkUserId: string): Promise<SocialAccountPublic[]> => {
     const accounts = await SOCIAL_REPOSITORY.listAccounts(clerkUserId);
-    return mergePublishAccounts(accounts, clerkUserId).map(toPublicAccount);
+    return withFacebookPageSelection(
+      mergeInstagramFallback(accounts, clerkUserId),
+    ).map(toPublicAccount);
   },
 
   updateAccount: async (
@@ -274,18 +301,18 @@ export const SOCIAL_SERVICE = {
     accountId: string,
     autoPublish: boolean,
   ): Promise<SocialAccountPublic> => {
-    if (accountId.startsWith('env:')) {
-      const envAccount = getEnvFallbackAccounts(clerkUserId).find(
-        (account) => account.id === accountId,
+    if (accountId === 'env:instagram') {
+      const account = getEnvFallbackAccounts(clerkUserId).find(
+        (candidate) => candidate.id === accountId,
       );
-      if (!envAccount) {
+      if (!account) {
         throw new AppError(
           ERROR_CODES.SOCIAL_ACCOUNT_NOT_FOUND,
           'Social account not found.',
           404,
         );
       }
-      return toPublicAccount({ ...envAccount, autoPublish });
+      return toPublicAccount({ ...account, autoPublish });
     }
     const account = await SOCIAL_REPOSITORY.getAccountById(accountId);
     if (!account || account.clerkUserId !== clerkUserId) {
@@ -299,11 +326,32 @@ export const SOCIAL_SERVICE = {
     return toPublicAccount({ ...account, autoPublish });
   },
 
+  selectFacebookAccount: async (
+    clerkUserId: string,
+    accountId: string,
+  ): Promise<SocialAccountPublic> => {
+    const account = await SOCIAL_REPOSITORY.getAccountById(accountId);
+    if (
+      !account ||
+      account.clerkUserId !== clerkUserId ||
+      account.platform !== 'FACEBOOK_PAGE' ||
+      account.status !== 'ACTIVE'
+    ) {
+      throw new AppError(
+        ERROR_CODES.SOCIAL_ACCOUNT_NOT_FOUND,
+        'Active Facebook Page not found.',
+        404,
+      );
+    }
+    await SOCIAL_REPOSITORY.selectFacebookAccount(accountId, clerkUserId);
+    return toPublicAccount({ ...account, isSelected: true });
+  },
+
   disconnectAccount: async (clerkUserId: string, accountId: string): Promise<void> => {
-    if (accountId.startsWith('env:')) {
+    if (accountId === 'env:instagram') {
       throw new AppError(
         ERROR_CODES.FORBIDDEN,
-        'Server-configured Meta test accounts cannot be disconnected here. Remove META_* tokens from the server environment instead.',
+        'The server-configured Instagram account cannot be disconnected here.',
         400,
       );
     }
@@ -367,7 +415,11 @@ export const SOCIAL_SERVICE = {
   }): Promise<SocialPostRecord> => {
     assertMetaPublishingConfigured();
     const stored = await SOCIAL_REPOSITORY.listAccounts(input.clerkUserId);
-    const accounts = mergePublishAccounts(stored, input.clerkUserId);
+    const accounts = restrictToSelectedFacebookPage(
+      withFacebookPageSelection(
+        mergeInstagramFallback(stored, input.clerkUserId),
+      ),
+    );
     let selected = accounts;
     if (input.accountIds?.length) {
       selected = accounts.filter((account) => input.accountIds?.includes(account.id));
@@ -431,8 +483,10 @@ export const SOCIAL_SERVICE = {
   },
 
   processPost: async (post: SocialPostRecord): Promise<SocialPostRecord> => {
+    const ownerAccounts = await SOCIAL_REPOSITORY.listAccounts(post.clerkUserId);
+    const selectedPage = selectedFacebookPage(ownerAccounts);
     const stored = await SOCIAL_REPOSITORY.getAccountsByIds(
-      post.accountIds.filter((id) => !id.startsWith('env:')),
+      post.accountIds.filter((id) => id !== 'env:instagram'),
     );
     const envAccounts = getEnvFallbackAccounts(post.clerkUserId).filter((account) =>
       post.accountIds.includes(account.id),
@@ -440,6 +494,12 @@ export const SOCIAL_SERVICE = {
     const accounts = [...stored, ...envAccounts];
     const targets = accounts.filter((account) => {
       if (account.status !== 'ACTIVE' || account.clerkUserId !== post.clerkUserId) {
+        return false;
+      }
+      if (
+        account.platform === 'FACEBOOK_PAGE' &&
+        account.id !== selectedPage?.id
+      ) {
         return false;
       }
       if (post.mode === 'SCHEDULED' && !account.autoPublish) {
@@ -451,15 +511,6 @@ export const SOCIAL_SERVICE = {
     const results: SocialPostResult[] = [];
     for (const account of targets) {
       try {
-console.log('[PUBLISH DEBUG]', {
-  platform: account.platform,
-  accountId: account.id,
-  tokenSource:
-    typeof account.encryptedAccessToken === 'string' &&
-    account.encryptedAccessToken.startsWith('env:')
-      ? 'environment'
-      : 'stored OAuth',
-});
         const accessToken = decryptToken(account.encryptedAccessToken);
         const postId =
           account.platform === 'INSTAGRAM'
