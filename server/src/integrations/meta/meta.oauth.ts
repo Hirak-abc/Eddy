@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { config } from '../../config/env';
 import { META_OAUTH_SCOPES } from '../../config/constants';
-import { graphBaseUrl, metaGet } from './meta.client';
+import { graphBaseUrl, MetaApiError, metaGet } from './meta.client';
 
 export interface OAuthStatePayload {
   clerkUserId: string;
@@ -35,6 +35,10 @@ interface AccountsResponse {
   data?: PageAccount[];
 }
 
+interface BusinessesResponse {
+  data?: Array<{ id: string }>;
+}
+
 const base64UrlEncode = (value: string): string =>
   Buffer.from(value, 'utf8').toString('base64url');
 
@@ -52,10 +56,7 @@ export const isMetaConfigured = (): boolean =>
 
 export const isMetaPublishingConfigured = (): boolean =>
   Boolean(
-    ((process.env.META_PAGE_ID || config.META_PAGE_ID) &&
-      (process.env.META_PAGE_ACCESS_TOKEN || config.META_PAGE_ACCESS_TOKEN)) ||
-      ((process.env.META_IG_USER_ID || config.META_IG_USER_ID) &&
-        (process.env.META_IG_ACCESS_TOKEN || config.META_IG_ACCESS_TOKEN)) ||
+    (config.META_IG_USER_ID && config.META_IG_ACCESS_TOKEN) ||
       isMetaConfigured(),
   );
 
@@ -112,6 +113,7 @@ export const buildAuthorizationUrl = (state: string): string => {
     state,
     response_type: 'code',
     scope: META_OAUTH_SCOPES,
+    auth_type: 'rerequest',
   });
   return `https://www.facebook.com/${config.META_GRAPH_API_VERSION || 'v21.0'}/dialog/oauth?${params.toString()}`;
 };
@@ -142,19 +144,75 @@ export const discoverConnectedAccounts = async (
   userAccessToken: string,
   tokenExpiresAt?: number,
 ): Promise<DiscoveredMetaAccount[]> => {
-  const pages = await metaGet<AccountsResponse>('/me/accounts', {
+  const pageFields =
+    'id,name,access_token,instagram_business_account{id,username}';
+  const directPages = await metaGet<AccountsResponse>('/me/accounts', {
     access_token: userAccessToken,
-    fields: 'id,name,access_token,instagram_business_account{id,username}',
+    fields: pageFields,
+    limit: '100',
   });
 
+  const pagesById = new Map(
+    (directPages.data || []).filter((page) => page.id && page.access_token)
+      .map((page) => [page.id, page]),
+  );
+
+  let businessLookupFailed = false;
+  try {
+    const businesses = await metaGet<BusinessesResponse>('/me/businesses', {
+      access_token: userAccessToken,
+      fields: 'id',
+      limit: '100',
+    });
+
+    for (const business of businesses.data || []) {
+      for (const edge of ['owned_pages', 'client_pages']) {
+        try {
+          const businessPages = await metaGet<AccountsResponse>(
+            `/${business.id}/${edge}`,
+            {
+              access_token: userAccessToken,
+              fields: pageFields,
+              limit: '100',
+            },
+          );
+          for (const page of businessPages.data || []) {
+            if (page.id && page.access_token && !pagesById.has(page.id)) {
+              pagesById.set(page.id, page);
+            }
+          }
+        } catch (error) {
+          businessLookupFailed = true;
+          console.warn('Meta business Page lookup failed', {
+            businessId: business.id,
+            edge,
+            status: error instanceof MetaApiError ? error.status : undefined,
+            metaCode: error instanceof MetaApiError ? error.metaCode : undefined,
+          });
+        }
+      }
+    }
+  } catch (error) {
+    businessLookupFailed = true;
+    console.warn('Meta business portfolio lookup failed', {
+      status: error instanceof MetaApiError ? error.status : undefined,
+      metaCode: error instanceof MetaApiError ? error.metaCode : undefined,
+    });
+  }
+
+  if (businessLookupFailed && pagesById.size === 0) {
+    throw new Error(
+      'Meta did not provide Facebook Pages. Confirm the Facebook profile has Page access and that the Eddy Meta app has the business_management permission enabled and approved for this app.',
+    );
+  }
+
   const discovered: DiscoveredMetaAccount[] = [];
-  for (const page of pages.data || []) {
-    if (!page.id || !page.access_token) continue;
+  for (const page of pagesById.values()) {
     discovered.push({
       platform: 'FACEBOOK_PAGE',
       externalId: page.id,
       name: page.name,
-      accessToken: page.access_token,
+      accessToken: page.access_token!,
       tokenExpiresAt,
     });
     if (page.instagram_business_account?.id) {
@@ -163,7 +221,7 @@ export const discoverConnectedAccounts = async (
         externalId: page.instagram_business_account.id,
         name: page.name,
         username: page.instagram_business_account.username,
-        accessToken: page.access_token,
+        accessToken: page.access_token!,
         tokenExpiresAt,
       });
     }

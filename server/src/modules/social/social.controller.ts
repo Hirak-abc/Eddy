@@ -114,11 +114,22 @@ export const SOCIAL_CONTROLLER = {
   updateAccount: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = accountIdParamsSchema.parse(req.params);
-      const { autoPublish } = updateAccountBodySchema.parse(req.body);
+      const update = updateAccountBodySchema.parse(req.body);
+      if ('isSelected' in update) {
+        const account = await SOCIAL_SERVICE.selectFacebookAccount(
+          req.user!.id,
+          id,
+        );
+        return res.status(200).json({
+          success: true,
+          data: { account },
+          error: null,
+        });
+      }
       const account = await SOCIAL_SERVICE.updateAccount(
         req.user!.id,
         id,
-        autoPublish,
+        update.autoPublish,
       );
       return res.status(200).json({
         success: true,

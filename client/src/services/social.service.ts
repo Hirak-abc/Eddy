@@ -10,6 +10,7 @@ export interface SocialAccount {
   username?: string;
   tokenExpiresAt?: number;
   autoPublish: boolean;
+  isSelected?: boolean;
   status: 'ACTIVE' | 'DISCONNECTED';
 }
 
@@ -33,6 +34,11 @@ export const socialService = {
   updateAutoPublish: (id: string, autoPublish: boolean) =>
     api.patch<{ account: SocialAccount }>(`/social/accounts/${id}`, {
       autoPublish,
+    }),
+
+  selectFacebookPage: (id: string) =>
+    api.patch<{ account: SocialAccount }>(`/social/accounts/${id}`, {
+      isSelected: true,
     }),
 
   disconnect: (id: string) =>

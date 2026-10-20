@@ -20,6 +20,7 @@ export const META_OAUTH_SCOPES = [
   'pages_show_list',
   'pages_read_engagement',
   'pages_manage_posts',
+  'business_management',
   'instagram_basic',
   'instagram_content_publish',
 ].join(',');

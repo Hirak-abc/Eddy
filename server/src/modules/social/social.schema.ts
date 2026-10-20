@@ -19,9 +19,10 @@ export const accountIdParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-export const updateAccountBodySchema = z.object({
-  autoPublish: z.boolean(),
-});
+export const updateAccountBodySchema = z.union([
+  z.object({ autoPublish: z.boolean() }),
+  z.object({ isSelected: z.literal(true) }),
+]);
 
 const publicHttpsUrl = z
   .string()

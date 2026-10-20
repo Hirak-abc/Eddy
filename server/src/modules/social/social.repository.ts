@@ -53,6 +53,11 @@ const updateAccount = makeFunctionReference<
   },
   unknown
 >('social:updateAccount');
+const selectFacebookAccount = makeFunctionReference<
+  'mutation',
+  { id: SocialAccountId; clerkUserId: string },
+  unknown
+>('social:selectFacebookAccount');
 const createPost = makeFunctionReference<
   'mutation',
   {
@@ -199,6 +204,41 @@ export const SOCIAL_REPOSITORY = {
       id: id as SocialAccountId,
       clerkUserId,
       ...patch,
+    });
+  },
+
+  selectFacebookAccount: async (
+    id: string,
+    clerkUserId: string,
+  ): Promise<void> => {
+    if (!convexClient) {
+      const target = memoryAccounts.get(id);
+      if (
+        !target ||
+        target.clerkUserId !== clerkUserId ||
+        target.platform !== 'FACEBOOK_PAGE' ||
+        target.status !== 'ACTIVE'
+      ) {
+        throw new Error('SOCIAL_ACCOUNT_NOT_FOUND');
+      }
+      const updatedAt = new Date().toISOString();
+      for (const [accountId, account] of memoryAccounts) {
+        if (
+          account.clerkUserId === clerkUserId &&
+          account.platform === 'FACEBOOK_PAGE'
+        ) {
+          memoryAccounts.set(accountId, {
+            ...account,
+            isSelected: accountId === id,
+            updatedAt,
+          });
+        }
+      }
+      return;
+    }
+    await convexClient.mutation(selectFacebookAccount, {
+      id: id as SocialAccountId,
+      clerkUserId,
     });
   },
 
