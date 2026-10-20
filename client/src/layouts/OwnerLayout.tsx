@@ -92,9 +92,9 @@ const OwnerHeader = ({
           </Button>
         ) : !isDashboard ? (
           <Link
-            to={ROUTES.OWNER_SETTINGS}
+            to={ROUTES.OWNER_PROFILE}
             className="group flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
-            title="Set up your business profile in Settings & Billing"
+            title="Set up your business profile"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm transition-transform group-hover:scale-105">
               <Store size={14} />
@@ -168,13 +168,12 @@ const OwnerHeader = ({
 };
 
 const OwnerWorkspace = () => {
-  const { business } = useOwner();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [savedBusiness, setSavedBusiness] = useState<OwnerBusiness | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const location = useLocation();
-  const sidebarBusinessName = savedBusiness ? business.name : '';
+  const sidebarBusinessName = savedBusiness?.name ?? '';
 
   const loadSavedBusiness = useCallback(async () => {
     setProfileLoading(true);
@@ -269,7 +268,7 @@ const OwnerWorkspace = () => {
                   Add your shop name, category, and address to personalize your owner dashboard and get your shop ready for customers.
                 </p>
                 <Link
-                  to={ROUTES.OWNER_SETTINGS}
+                  to={ROUTES.OWNER_PROFILE}
                   className="profile-color-blink group relative mx-auto mt-7 flex min-h-14 w-full max-w-sm items-center justify-center gap-3 rounded-2xl border px-6 py-3 text-base font-extrabold shadow-lg transition-transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-yellow-300/50"
                 >
                   <Store size={20} />
