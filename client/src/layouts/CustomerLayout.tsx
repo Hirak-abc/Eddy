@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { Coins, MapPin } from 'lucide-react';
+import { Coins, MapPin, Menu } from 'lucide-react';
 import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useProfilePhoto } from '../hooks/useProfilePhoto';
@@ -9,15 +10,26 @@ import { ROUTES } from '../lib/constants';
 export const CustomerLayout = () => {
   const { photoUrl } = useProfilePhoto();
   const { wallet, isLoading } = useCustomerWallet();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
-      <CustomerSidebar />
+      <CustomerSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="min-w-0 flex-1 bg-slate-50 dark:bg-slate-950">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-900/90">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600">
-            <MapPin size={15} className="text-amber-500" />
-            Lucknow
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              aria-label="Open menu"
+              className="rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white lg:hidden"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600">
+              <MapPin size={15} className="text-amber-500" />
+              Lucknow
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-extrabold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30">
