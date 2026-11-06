@@ -1,103 +1,108 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ROUTES } from '@/lib/constants';
-import { ChevronRight, Sparkles, Play } from 'lucide-react';
+import { ChevronRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const HERO_EASE = [0.22, 1, 0.36, 1] as const;
+
+const Word = ({
+  children,
+  index,
+  className,
+}: {
+  children: React.ReactNode;
+  index: number;
+  className?: string;
+}) => (
+  <span className="inline-block overflow-hidden pb-1 -mb-1 align-bottom">
+    <motion.span
+      className={`inline-block will-change-transform ${className ?? ''}`}
+      initial={{ y: '105%' }}
+      animate={{ y: '0%' }}
+      transition={{
+        duration: 1.1,
+        ease: HERO_EASE,
+        delay: 0.35 + index * 0.09,
+      }}
+    >
+      {children}
+    </motion.span>
+  </span>
+);
 
 export const HeroSection = () => {
   return (
-    <section id="top" className="relative min-h-screen text-white overflow-hidden flex items-center pt-16" style={{ backgroundColor: '#23262F' }}>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgroundColor: 'rgba(58, 12, 163, 0.3)' }}
-          animate={{ x: [0, 100, 0], y: [0, -50, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-          style={{ backgroundColor: 'rgba(0, 87, 255, 0.2)' }}
-          animate={{ x: [0, -80, 0], y: [0, 60, 0], scale: [1.1, 1, 1.1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl"
-          style={{ backgroundColor: 'rgba(255, 242, 117, 0.15)' }}
-          animate={{ x: [-50, 50, -50], y: [50, -30, 50] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </div>
+    <section
+      id="top"
+      className="hero-font relative mt-16 w-full text-white overflow-hidden bg-black"
+      style={{ height: 'calc(100vh - 4rem)', minHeight: 'calc(100vh - 4rem)' }}
+    >
+      {/* Full-frame background image — cover fills the whole frame, touching both edges */}
+      <motion.div
+        role="img"
+        aria-label="Marketing Dashboard"
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundImage: 'url(/images/hero-cropped.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+        initial={{ scale: 1.15 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 2.6, ease: HERO_EASE }}
+      />
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(to right, #fff275 1px, transparent 1px), linear-gradient(to bottom, #fff275 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      {/* Soft bottom fade only — keeps text readable without covering the image */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-      {/* Floating Particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-2 h-2 rounded-full"
-          style={{
-            backgroundColor: i % 2 === 0 ? '#3A0CA3' : '#0057FF',
-            left: `${20 + i * 12}%`,
-            top: `${60 + i * 5}%`
-          }}
-          initial={{ opacity: 0, y: 0 }}
-          animate={{ opacity: [0, 1, 1, 0], y: [0, -100, -200, -300] }}
-          transition={{ duration: 4 + i * 0.5, repeat: Infinity, delay: i * 0.8, ease: 'easeInOut' }}
-        />
-      ))}
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        {/* Left Content */}
-        <div className="space-y-8">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full w-fit border"
-            style={{ backgroundColor: 'rgba(58, 12, 163, 0.3)', borderColor: '#3A0CA3' }}
+      {/* Content — anchored lower-left over the image */}
+      <div className="relative z-10 w-full px-6 sm:px-10 lg:px-16 flex h-full flex-col justify-end pb-24 pt-24">
+        <div className="max-w-2xl space-y-8">
+          {/* Headline — word-by-word reveal */}
+          <h1
+            className="font-bold text-white"
+            style={{
+              fontSize: 'clamp(2.25rem, 6vw, 4.75rem)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.03em',
+              textShadow: '0 1px 12px rgba(0, 0, 0, 0.55)',
+            }}
           >
-            <Sparkles className="w-4 h-4" style={{ color: '#fff275' }} />
-            <span className="text-sm font-medium" style={{ color: '#fff275' }}>Marketing Platform</span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            <h1 className="text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight text-white">
-              Marketing
-              <span className="block" style={{ color: '#fff275' }}>Made Simple</span>
-            </h1>
-          </motion.div>
+            <Word index={0}>Marketing</Word>
+            <span className="block">
+              <Word index={1}><span style={{ color: '#fff275' }}>Made</span></Word>{' '}
+              <Word index={2}><span style={{ color: '#fff275' }}>Simple</span></Word>
+            </span>
+          </h1>
 
           {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-            className="text-lg leading-relaxed max-w-xl"
-            style={{ color: '#F8E7C9' }}
+            transition={{ duration: 0.8, ease: HERO_EASE, delay: 0.75 }}
+            className="max-w-xl text-lg leading-relaxed text-white/85"
+            style={{ textShadow: '0 1px 10px rgba(0, 0, 0, 0.6)' }}
           >
             Create stunning flyers, publish across social media, and build customer loyalty—all from one intelligent platform built for small businesses.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons — pill style */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 pt-4"
+            transition={{ duration: 0.8, ease: HERO_EASE, delay: 0.9 }}
+            className="flex flex-col sm:flex-row gap-4 pt-2"
           >
             <Button
               asChild
               size="lg"
-              className="text-white font-semibold text-base transition-all hover:shadow-2xl hover:shadow-purple-500/30"
-              style={{ backgroundColor: '#3A0CA3' }}
+              className="rounded-full bg-white text-black font-semibold text-base px-8 transition-all hover:bg-white/90 hover:shadow-2xl hover:shadow-white/10"
             >
               <Link to={ROUTES.SIGN_UP} className="flex items-center gap-2">
                 Start Free Today
@@ -108,8 +113,7 @@ export const HeroSection = () => {
               asChild
               variant="outline"
               size="lg"
-              className="font-semibold text-base transition-all hover:bg-white/10"
-              style={{ borderColor: '#0057FF', color: '#0057FF' }}
+              className="rounded-full border-white/20 bg-white/[0.04] font-semibold text-base px-8 text-white backdrop-blur-sm transition-all hover:bg-white/10"
             >
               <a href="#how-it-works" className="flex items-center gap-2">
                 <Play className="w-4 h-4" />
@@ -117,69 +121,24 @@ export const HeroSection = () => {
               </a>
             </Button>
           </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.0 }}
-            className="grid grid-cols-3 gap-6 pt-8"
-            style={{ borderTopColor: '#3A0CA3', borderTopWidth: '1px' }}
-          >
-            <div>
-              <div className="text-3xl font-bold" style={{ color: '#fff275' }}>5K+</div>
-              <p className="text-sm" style={{ color: '#F8E7C9' }}>Active Businesses</p>
-            </div>
-            <div>
-              <div className="text-3xl font-bold" style={{ color: '#0057FF' }}>2M+</div>
-              <p className="text-sm" style={{ color: '#F8E7C9' }}>Flyers Created</p>
-            </div>
-            <div>
-              <div className="text-3xl font-bold" style={{ color: '#064E3B' }}>40%</div>
-              <p className="text-sm" style={{ color: '#F8E7C9' }}>Traffic Increase</p>
-            </div>
-          </motion.div>
         </div>
-
-        {/* Right Image - Floating Card */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="relative h-96 lg:h-[600px] rounded-2xl overflow-hidden shadow-2xl border-2"
-          style={{ borderColor: '#3A0CA3' }}
-        >
-          <img
-            src="https://media.istockphoto.com/id/505650897/photo/beautiful-young-woman-holding-blue-scarf-on-the-wind.jpg?s=612x612&w=0&k=20&c=s2_llYX1VE_oxDf144pIy-ZHSIvQEsZd2xDNGUevHA8="
-            alt="Marketing Dashboard"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=700&fit=crop&auto=format&q=80';
-            }}
-          />
-          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to top, #23262F, transparent 60%)' }} />
-          <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#3A0CA3', color: '#fff275' }}>
-            ✨ Eddy Studio
-          </div>
-        </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* Scroll Indicator — minimal line + label */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-3"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
+        transition={{ delay: 1.6, duration: 1 }}
       >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex flex-col items-center gap-2"
-          style={{ color: '#fff275' }}
-        >
-          <span className="text-xs font-medium">Scroll to explore</span>
-          <ChevronRight className="w-5 h-5 rotate-90" />
-        </motion.div>
+        <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">Scroll to explore</span>
+        <div className="relative h-12 w-px overflow-hidden bg-white/15">
+          <motion.div
+            className="absolute inset-x-0 top-0 h-full bg-white/70"
+            animate={{ y: ['-100%', '100%'] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
       </motion.div>
     </section>
   );

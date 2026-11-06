@@ -59,7 +59,7 @@ export const CTAFooter = () => {
           className="text-xl mb-12 max-w-2xl mx-auto leading-relaxed"
           style={{ color: '#F8E7C9' }}
         >
-          Join 5,000+ SMBs creating stunning marketing flyers with AI. Get started free — no credit card required.
+          Start creating stunning marketing flyers with AI. Get started free — no credit card required.
         </motion.p>
 
         {/* CTA Button */}
@@ -108,25 +108,25 @@ export const CTAFooter = () => {
       {/* Footer with Vertical Strips */}
       <footer
         className="relative -mx-4 mt-24 pt-12 sm:-mx-6 lg:-mx-8"
-        style={{ backgroundColor: '#F8E7C9' }}
+        style={{ backgroundColor: '#000000' }}
       >
         <div className="relative mx-auto max-w-6xl">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
             {/* Brand */}
-            <div className="border-black/10 px-8 py-12 md:border-r">
+            <div className="border-white/10 px-8 py-12 md:border-r">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: '#3A0CA3' }}>
                   <Zap className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-lg font-bold" style={{ color: '#000000' }}>Eddy</span>
+                <span className="text-lg font-bold" style={{ color: '#FFFFFF' }}>Eddy</span>
               </div>
-              <p className="text-xs" style={{ color: '#000000' }}>Marketing for local businesses.</p>
+              <p className="text-xs" style={{ color: '#FFFFFF' }}>Marketing for local businesses.</p>
             </div>
 
             {/* Product */}
-            <div className="border-black/10 px-8 py-12 md:border-r">
-              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Product</h4>
-              <ul className="space-y-2 text-xs text-black">
+            <div className="border-white/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#FFFFFF' }}>Product</h4>
+              <ul className="space-y-2 text-xs text-white">
                 <li><Link to={ROUTES.FEATURES} className="transition hover:underline">Features</Link></li>
                 <li><Link to={ROUTES.PRICING} className="transition hover:underline">Pricing</Link></li>
                 {/* <li><a href="#" className="transition hover:underline">Blog</a></li> */}
@@ -134,9 +134,9 @@ export const CTAFooter = () => {
             </div>
 
             {/* Company */}
-            <div className="border-black/10 px-8 py-12 md:border-r">
-              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Company</h4>
-              <ul className="space-y-2 text-xs text-black">
+            <div className="border-white/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#FFFFFF' }}>Company</h4>
+              <ul className="space-y-2 text-xs text-white">
                 <li><Link to={ROUTES.ABOUT} className="transition hover:underline">About</Link></li>
                 <li><Link to={ROUTES.CONTACT} className="transition hover:underline">Contact</Link></li>
                 <li><Link to={ROUTES.SUPPORT} className="transition hover:underline">Support</Link></li>
@@ -144,9 +144,9 @@ export const CTAFooter = () => {
             </div>
 
             {/* Resources */}
-            <div className="border-black/10 px-8 py-12 md:border-r">
-              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Resources</h4>
-              <ul className="space-y-2 text-xs text-black">
+            <div className="border-white/10 px-8 py-12 md:border-r">
+              <h4 className="mb-4 font-bold" style={{ color: '#FFFFFF' }}>Resources</h4>
+              <ul className="space-y-2 text-xs text-white">
                 <li><Link to={ROUTES.DOCUMENTATION} className="transition hover:underline">Documentation</Link></li>
                 <li><Link to={ROUTES.HELP_CENTER} className="transition hover:underline">Help Center</Link></li>
                 {/* <li><a href="#" className="transition hover:underline">Status</a></li> */}
@@ -155,8 +155,8 @@ export const CTAFooter = () => {
 
             {/* Legal */}
             <div className="px-8 py-12">
-              <h4 className="mb-4 font-bold" style={{ color: '#000000' }}>Legal</h4>
-              <ul className="space-y-2 text-xs text-black">
+              <h4 className="mb-4 font-bold" style={{ color: '#FFFFFF' }}>Legal</h4>
+              <ul className="space-y-2 text-xs text-white">
                 <li><Link to="/privacy" className="transition hover:underline">Privacy</Link></li>
                 <li><Link to="/terms" className="transition hover:underline">Terms</Link></li>
                 <li><Link to="/data-deletion" className="transition hover:underline">Data Deletion</Link></li>
@@ -166,8 +166,8 @@ export const CTAFooter = () => {
           </div>
 
           {/* Copyright */}
-          <div className="border-t border-black/10 py-8 text-center">
-            <p className="text-xs text-black">&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing.</p>
+          <div className="border-t border-white/10 py-8 text-center">
+            <p className="text-xs text-white">&copy; 2026 Eddy. All rights reserved. Transforming SMB marketing.</p>
           </div>
         </div>
       </footer>
