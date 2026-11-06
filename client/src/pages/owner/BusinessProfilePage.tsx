@@ -27,10 +27,19 @@ import type { BusinessImages, StoredImage } from '@/types';
 const businessProfileSchema = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters'),
   category: z.string().min(2, 'Category is required'),
+  otherCategory: z.string().optional(),
   location: z.string().min(3, 'Physical address or location is required'),
   phone: z.string().min(10, 'Valid 10-digit phone required'),
   email: z.string().email('Valid email required'),
   description: z.string().max(500, 'Description must be under 500 characters').optional(),
+}).superRefine((data, context) => {
+  if (data.category === 'Other' && !data.otherCategory?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['otherCategory'],
+      message: 'Please enter your business category',
+    });
+  }
 });
 
 type BusinessProfileFormData = z.infer<typeof businessProfileSchema>;
@@ -92,12 +101,30 @@ export const BusinessProfilePage = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<BusinessProfileFormData>({
     resolver: zodResolver(businessProfileSchema),
     defaultValues: {
       name: business.name,
-      category: business.category,
+      category: [
+        'Cafe & Bakery',
+        'Restaurant & Fast Food',
+        'Salon & Spa',
+        'Retail & Fashion',
+        'Fitness & Gym',
+        'Grocery & Organic',
+        'Medical and Health',
+      ].includes(business.category) ? business.category : 'Other',
+      otherCategory: [
+        'Cafe & Bakery',
+        'Restaurant & Fast Food',
+        'Salon & Spa',
+        'Retail & Fashion',
+        'Fitness & Gym',
+        'Grocery & Organic',
+        'Medical and Health',
+      ].includes(business.category) ? '' : business.category,
       location: business.location,
       phone: business.phone || '9876543210',
       email: business.email || 'owner@royalchaicafe.com',
@@ -108,7 +135,7 @@ export const BusinessProfilePage = () => {
   const handleSaveDetails = async (data: BusinessProfileFormData) => {
     const details = {
       name: data.name,
-      category: data.category,
+      category: data.category === 'Other' ? data.otherCategory!.trim() : data.category,
       address: data.location,
     };
     const currentBusiness = await businessService.getMine();
@@ -329,8 +356,20 @@ export const BusinessProfilePage = () => {
                       <option value="Retail & Fashion">Retail and Fashion</option>
                       <option value="Fitness & Gym">Fitness and Gym</option>
                       <option value="Grocery & Organic">Grocery and Organic</option>
+                      <option value="Medical and Health">Medical and Health</option>
+                      <option value="Other">Other</option>
                     </select>
                     {errors.category && <p className="mt-1 text-xs text-rose-500">{errors.category.message}</p>}
+                    {watch('category') === 'Other' && (
+                      <>
+                        <Input
+                          {...register('otherCategory')}
+                          placeholder="Enter your business category"
+                          className="mt-2 text-sm font-medium"
+                        />
+                        {errors.otherCategory && <p className="mt-1 text-xs text-rose-500">{errors.otherCategory.message}</p>}
+                      </>
+                    )}
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">Phone Number</label>

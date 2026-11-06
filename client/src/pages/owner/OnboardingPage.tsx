@@ -22,11 +22,20 @@ import { businessService, notifyBusinessProfileUpdated } from '@/services/busine
 const onboardingSchema = z.object({
   name: z.string().min(2, 'Business name must be at least 2 characters'),
   category: z.string().min(1, 'Category is required'),
+  otherCategory: z.string().optional(),
   location: z.string().min(3, 'Address or location is required'),
   phone: z.string().min(10, 'Valid 10-digit phone required'),
   email: z.string().email('Valid business email required'),
   autoPublish: z.boolean().default(true),
   defaultDiscount: z.string().default('20'),
+}).superRefine((data, context) => {
+  if (data.category === 'Other' && !data.otherCategory?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['otherCategory'],
+      message: 'Please enter your business category',
+    });
+  }
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
@@ -46,6 +55,7 @@ export const OnboardingPage = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema) as never,
@@ -69,7 +79,7 @@ export const OnboardingPage = () => {
 
     const details = {
       name: data.name.trim(),
-      category: data.category.trim(),
+      category: (data.category === 'Other' ? data.otherCategory! : data.category).trim(),
       address: data.location.trim(),
     };
     const savedBusiness = profile.data
@@ -207,8 +217,20 @@ export const OnboardingPage = () => {
                   <option value="Retail & Fashion">Retail & Fashion</option>
                   <option value="Fitness & Gym">Fitness & Gym</option>
                   <option value="Grocery & Organic">Grocery & Organic</option>
+                  <option value="Medical and Health">Medical and Health</option>
+                  <option value="Other">Other</option>
                 </select>
                 {errors.category && <p className="text-rose-500 text-xs mt-1">{errors.category.message}</p>}
+                {watch('category') === 'Other' && (
+                  <>
+                    <Input
+                      {...register('otherCategory')}
+                      placeholder="Enter your business category"
+                      className="mt-2"
+                    />
+                    {errors.otherCategory && <p className="text-rose-500 text-xs mt-1">{errors.otherCategory.message}</p>}
+                  </>
+                )}
               </div>
 
               <div>
