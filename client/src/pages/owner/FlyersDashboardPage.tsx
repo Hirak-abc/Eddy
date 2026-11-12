@@ -4,10 +4,12 @@ import {
   CalendarClock,
   CircleAlert,
   Clock3,
+  Eye,
   LoaderCircle,
   Plus,
   Send,
   Sparkles,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +27,7 @@ const localDateTime = (value: string) => {
 
 export const FlyersDashboardPage = () => {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [previewFlyer, setPreviewFlyer] = useState<Flyer | null>(null);
   const [filter, setFilter] = useState<FlyerFilter>("ALL");
   const [scheduleTimes, setScheduleTimes] = useState<Record<string, string>>({});
   const [busyFlyerId, setBusyFlyerId] = useState<string | null>(null);
@@ -45,6 +48,17 @@ export const FlyersDashboardPage = () => {
     const timer = window.setInterval(() => void refresh(), 5000);
     return () => window.clearInterval(timer);
   }, [refresh]);
+
+  useEffect(() => {
+    if (!previewFlyer) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreviewFlyer(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewFlyer]);
 
   const filteredFlyers = useMemo(
     () =>
@@ -172,7 +186,7 @@ export const FlyersDashboardPage = () => {
                   <img
                     src={flyer.imageUrl}
                     alt={flyer.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-sm text-slate-500">
@@ -197,6 +211,17 @@ export const FlyersDashboardPage = () => {
               </div>
 
               <div className="space-y-3 p-4">
+                {flyer.imageUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setPreviewFlyer(flyer)}
+                    className="w-full rounded-xl"
+                  >
+                    <Eye size={14} className="mr-1.5" />
+                    Preview full flyer
+                  </Button>
+                )}
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-600">
                     {flyer.kind === "AUTOMATIC" ? "Automatic trend flyer" : "Custom flyer"}
@@ -275,6 +300,60 @@ export const FlyersDashboardPage = () => {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {previewFlyer?.imageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm sm:p-6"
+          onClick={() => setPreviewFlyer(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="flyer-preview-title"
+            className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-950 p-3 sm:p-5">
+              <img
+                src={previewFlyer.imageUrl}
+                alt={previewFlyer.title}
+                className="max-h-[70vh] max-w-full object-contain"
+              />
+            </div>
+            <aside className="max-h-[30vh] space-y-3 overflow-y-auto p-5 sm:max-h-[90vh] sm:w-80 sm:shrink-0">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-indigo-600">
+                    Full flyer preview
+                  </p>
+                  <h2
+                    id="flyer-preview-title"
+                    className="mt-1 font-bold text-slate-900"
+                  >
+                    {previewFlyer.title}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewFlyer(null)}
+                  aria-label="Close flyer preview"
+                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="whitespace-pre-wrap text-sm text-slate-600">
+                {previewFlyer.caption || previewFlyer.topic}
+              </p>
+              {previewFlyer.hashtags.length > 0 && (
+                <p className="text-sm text-indigo-600">
+                  {previewFlyer.hashtags.join(" ")}
+                </p>
+              )}
+            </aside>
+          </section>
         </div>
       )}
     </div>
