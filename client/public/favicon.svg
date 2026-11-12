@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Background - matches Eddy navbar/footer cream #F8E7C9 -->
+  <rect width="1024" height="1024" fill="#F8E7C9"/>
+  <!-- Icon box - matches Eddy brand purple #3A0CA3 -->
+  <rect x="256" y="140" width="512" height="512" rx="120" fill="#3A0CA3"/>
+  <!-- Lightning bolt - matches Lucide Zap mark, solid white -->
+  <path d="M 596 222 L 446 428 L 526 428 L 424 586 L 600 368 L 522 368 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="24" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Wordmark -->
+  <text x="512" y="858" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="190" font-weight="900" letter-spacing="-4" fill="#23262F">Eddy</text>
+</svg>

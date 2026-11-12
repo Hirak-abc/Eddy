@@ -3,7 +3,6 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 import {
   Menu,
-  X,
   Sparkles,
   Store,
   CheckCircle2,
@@ -40,12 +39,12 @@ const OwnerHeader = ({
   const isDashboard = location.pathname === ROUTES.OWNER_DASHBOARD;
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 lg:px-8 flex items-center justify-between shadow-xs dark:border-slate-800 dark:bg-slate-900/95">
-      {/* Left: Mobile Hamburger & Store Badge */}
+    <header className="sticky top-0 z-20 h-16 bg-black text-white backdrop-blur-md border-b border-white/10 px-4 lg:px-8 flex items-center justify-between shadow-xs">
+      {/* Left: Hamburger & Store Badge */}
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+          className="p-2 rounded-lg text-white hover:bg-white/10 hover:text-white transition-colors"
           aria-label="Open navigation menu"
         >
           <Menu size={22} />
@@ -54,30 +53,30 @@ const OwnerHeader = ({
         {savedBusiness ? (
           <Link
             to={ROUTES.OWNER_PROFILE}
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-all group"
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all group"
             title="View & Edit Business Profile"
           >
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
               <Store size={15} />
             </div>
             <div className="flex flex-col text-left">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
+                <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
                   {savedBusiness.name}
                 </span>
                 {savedBusiness.verificationStatus === 'VERIFIED' && (
                   <span title="Verified Business" className="inline-flex">
-                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-slate-500 font-medium truncate max-w-[140px] sm:max-w-[180px]">
+              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[140px] sm:max-w-[180px]">
                 {savedBusiness.category}
               </span>
             </div>
           </Link>
         ) : profileLoading ? (
-          <div className="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300">
             <Store size={15} />
             Loading shop profile…
           </div>
@@ -86,20 +85,20 @@ const OwnerHeader = ({
             variant="outline"
             onClick={onRetryProfile}
             title={profileError}
-            className="rounded-xl text-xs"
+            className="rounded-xl text-xs border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
           >
             Retry profile
           </Button>
         ) : !isDashboard ? (
           <Link
             to={ROUTES.OWNER_PROFILE}
-            className="group flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-violet-50 px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
+            className="group flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white/15 hover:border-white/20"
             title="Set up your business profile"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm transition-transform group-hover:scale-105">
               <Store size={14} />
             </div>
-            <span className="text-xs font-bold text-indigo-800 transition-colors group-hover:text-violet-800">
+            <span className="text-xs font-bold text-white transition-colors group-hover:text-indigo-200">
               Set your profile
             </span>
           </Link>
@@ -113,16 +112,16 @@ const OwnerHeader = ({
           onClick={() => toggleAutoPublish()}
           className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
             business.autoPublish
-              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+              ? 'bg-indigo-600/20 border-indigo-400/30 text-indigo-200 hover:bg-indigo-600/30'
+              : 'bg-white/10 border-white/10 text-slate-300 hover:bg-white/15'
           }`}
           title="Toggle automatic AI flyer publication (72h after generation)"
         >
-          <Clock size={13} className={business.autoPublish ? 'text-indigo-600' : 'text-slate-400'} />
+          <Clock size={13} className={business.autoPublish ? 'text-indigo-300' : 'text-slate-400'} />
           <span>Auto-Publish: <strong>{business.autoPublish ? 'ON' : 'PAUSED'}</strong></span>
           <span
             className={`w-2 h-2 rounded-full ${
-              business.autoPublish ? 'bg-indigo-600' : 'bg-slate-400'
+              business.autoPublish ? 'bg-indigo-300' : 'bg-slate-500'
             }`}
           />
         </button>
@@ -142,17 +141,17 @@ const OwnerHeader = ({
           to={`/shop/${business.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors font-medium"
+          className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-white/10 transition-colors font-medium"
           title="Preview Customer Shop Environment"
         >
           <span>Live Shop</span>
           <ExternalLink size={12} />
         </Link>
 
-        <ThemeToggle className="h-8 w-8" />
+        <ThemeToggle className="h-8 w-8 bg-white/10 text-white ring-white/10 hover:bg-white/15 hover:text-white dark:bg-white/10 dark:text-amber-200 dark:ring-white/10 dark:hover:bg-white/15 dark:hover:text-white" />
 
         {/* User Account / Clerk Avatar */}
-        <div className="pl-1 border-l border-slate-200 flex items-center">
+        <div className="pl-1 border-l border-white/10 flex items-center">
           <UserButton
             afterSignOutUrl={ROUTES.HOME}
             appearance={{
@@ -196,30 +195,19 @@ const OwnerWorkspace = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-row dark:bg-slate-950">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <Sidebar businessName={sidebarBusinessName} />
-      </div>
-
-      {/* Mobile Drawer Overlay */}
+      {/* Drawer Overlay — opens via hamburger (all screens) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div className="fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative z-10 flex">
+          <div className="relative z-10 flex h-full bg-black">
             <Sidebar
               isMobile
               businessName={sidebarBusinessName}
               onCloseMobile={() => setMobileMenuOpen(false)}
             />
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
-            >
-              <X size={20} />
-            </button>
           </div>
         </div>
       )}
