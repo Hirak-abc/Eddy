@@ -271,9 +271,6 @@ export const GenerationWorkflow = () => {
                   <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide text-white shadow-lg" style={{ backgroundColor: '#3A0CA3' }}>
                     SPECIAL OFFER
                   </div>
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ backgroundColor: '#fff275', color: '#23262F' }}>
-                    25% OFF
-                  </div>
                   {/* Flyer copy */}
                   <div className="absolute bottom-0 inset-x-0 p-4 text-left">
                     <div className="text-base font-bold text-white leading-snug">

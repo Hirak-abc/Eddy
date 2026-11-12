@@ -36,7 +36,7 @@ export const LandingPage = () => {
   return (
     <div className="bg-white">
       <Navbar />
-      <main className="pt-16">
+      <main>
         <HeroSection />
         <FeaturesSection />
         <GenerationWorkflow />
