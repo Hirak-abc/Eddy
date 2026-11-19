@@ -76,7 +76,7 @@ const itemVariants = {
 
 export const FlyerGallery = () => {
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ backgroundColor: '#23262F' }}>
+    <section id="gallery" className="scroll-mt-16 py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ backgroundColor: '#222021' }}>
       {/* Background Glow */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/3 w-96 h-96 rounded-full blur-3xl opacity-20" style={{ backgroundColor: '#3A0CA3' }} />

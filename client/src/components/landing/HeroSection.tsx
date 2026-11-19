@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ROUTES } from '@/lib/constants';
-import { ChevronRight, Play } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const HERO_EASE = [0.22, 1, 0.36, 1] as const;
@@ -108,17 +108,6 @@ export const HeroSection = () => {
                 Start Free Today
                 <ChevronRight className="w-4 h-4" />
               </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="rounded-full border-white/20 bg-white/[0.04] font-semibold text-base px-8 text-white backdrop-blur-sm transition-all hover:bg-white/10"
-            >
-              <a href="#how-it-works" className="flex items-center gap-2">
-                <Play className="w-4 h-4" />
-                See How It Works
-              </a>
             </Button>
           </motion.div>
         </div>
