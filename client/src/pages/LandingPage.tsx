@@ -4,7 +4,6 @@ import { ROUTES } from '../lib/constants';
 import { Navbar } from '../components/landing/Navbar';
 import { HeroSection } from '../components/landing/HeroSection';
 import { FeaturesSection } from '../components/landing/FeaturesSection';
-import { GenerationWorkflow } from '../components/landing/GenerationWorkflow';
 import { FlyerGallery } from '../components/landing/FlyerGallery';
 import { TestimonialsSection } from '../components/landing/TestimonialsSection';
 import { CTAFooter } from '../components/landing/CTAFooter';
@@ -39,7 +38,6 @@ export const LandingPage = () => {
       <main>
         <HeroSection />
         <FeaturesSection />
-        <GenerationWorkflow />
         <FlyerGallery />
         <TestimonialsSection />
         <CTAFooter />
